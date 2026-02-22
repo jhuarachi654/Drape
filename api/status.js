@@ -12,21 +12,23 @@ export default async function handler(req, res) {
   try {
     const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
       headers: {
-        'Authorization': `Bearer ${api_key}`,
+        'api-key': api_key, // Fashn.ai uses 'api-key' header
       },
     });
 
-    const text = await response.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      return res.status(500).json({ error: `Fashn.ai returned non-JSON: ${text.slice(0, 300)}` });
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json({ 
+        error: data.message || data.error || 'Fashn.ai status error',
+        details: data 
+      });
     }
 
-    return res.status(response.status).json(data);
+    return res.status(200).json(data);
 
   } catch (err) {
+    console.error('Fashn.ai status error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
