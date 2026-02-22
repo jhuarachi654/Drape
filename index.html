@@ -4,121 +4,155 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DRAPE — My Closet</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f0ece4; --surface: #e8e2d8; --dark: #1a1714;
-    --mid: #6b6560; --accent: #c8a98a; --white: #faf8f4;
-    --border: rgba(26,23,20,0.1); --drawer-h: 180px;
+    --bg: #f0ece4; --dark: #1a1714; --mid: #6b6560;
+    --accent: #c8a98a; --white: #faf8f4; --border: rgba(26,23,20,0.1);
+    --drawer-h: 190px;
   }
   body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--dark); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 200; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); opacity: 0.6; }
+  body::before { content:''; position:fixed; inset:0; pointer-events:none; z-index:500; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); opacity:0.6; }
 
-  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg); z-index: 10; }
-  .logo { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; letter-spacing: 0.22em; }
-  .logo em { font-style: italic; color: var(--accent); }
-  .header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .model-upload-btn { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); cursor: pointer; border: 1px solid var(--border); padding: 7px 14px; border-radius: 100px; background: var(--white); transition: all 0.2s; white-space: nowrap; }
-  .model-upload-btn:hover { border-color: var(--accent); color: var(--dark); }
-  #modelFileInput { display: none; }
-  .outfit-label { font-size: 9px; letter-spacing: 0.12em; color: var(--mid); text-transform: uppercase; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .reset-btn { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); cursor: pointer; border: 1px solid var(--border); padding: 7px 14px; border-radius: 100px; background: transparent; transition: all 0.2s; white-space: nowrap; }
-  .reset-btn:hover { border-color: var(--dark); color: var(--dark); }
+  header { display:flex; align-items:center; justify-content:space-between; padding:16px 28px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg); z-index:20; }
+  .logo { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; letter-spacing:0.22em; }
+  .logo em { font-style:italic; color:var(--accent); }
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .hbtn { font-size:9px; letter-spacing:0.13em; text-transform:uppercase; color:var(--mid); cursor:pointer; border:1px solid var(--border); padding:6px 13px; border-radius:100px; background:var(--white); transition:all 0.2s; white-space:nowrap; }
+  .hbtn:hover { border-color:var(--accent); color:var(--dark); }
+  #modelFileInput, #itemFileInput { display:none; }
+  .outfit-label { font-size:9px; letter-spacing:0.1em; color:var(--mid); text-transform:uppercase; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-  .stage { flex: 1; display: grid; grid-template-columns: 72px 1fr 72px; align-items: center; overflow: hidden; position: relative; }
-  .arrow-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; height: 100%; padding: 16px 0; }
-  .category-block { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-  .cat-label { font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mid); writing-mode: vertical-rl; transform: rotate(180deg); }
-  .arrow-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--dark); transition: all 0.15s; flex-shrink: 0; }
-  .arrow-btn:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--white); }
-  .arrow-btn:disabled { opacity: 0.2; cursor: not-allowed; }
-  .item-counter { font-size: 8px; color: var(--mid); letter-spacing: 0.1em; text-align: center; min-width: 28px; }
+  .stage { flex:1; display:grid; grid-template-columns:72px 1fr 72px; align-items:center; overflow:hidden; position:relative; }
 
-  .canvas-wrap { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  .model-stack { position: relative; height: 90%; max-height: 620px; aspect-ratio: 9/16; }
+  .arrow-col { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:12px 0; height:100%; }
+  .cat-block { display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .cat-label { font-size:7px; letter-spacing:0.2em; text-transform:uppercase; color:var(--mid); writing-mode:vertical-rl; transform:rotate(180deg); }
+  .abtn { width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:var(--white); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--dark); transition:all 0.15s; }
+  .abtn:hover { background:var(--accent); border-color:var(--accent); color:var(--white); }
+  .ctr { font-size:8px; color:var(--mid); text-align:center; min-width:26px; }
 
-  /* base model — not draggable */
-  #modelBase { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; z-index: 1; display: none; }
+  .canvas-wrap { position:relative; height:100%; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .model-stack { position:relative; height:90%; max-height:600px; aspect-ratio:9/16; }
+  #modelBase { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; z-index:1; display:none; }
+  .empty-model { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border:1.5px dashed var(--border); border-radius:20px; background:var(--white); cursor:pointer; z-index:0; }
+  .empty-model p { font-size:10px; color:var(--mid); text-align:center; line-height:1.7; }
+  .empty-model span { font-size:26px; }
 
-  .empty-model { position: absolute; inset: 0; z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 1.5px dashed var(--border); border-radius: 20px; background: var(--white); cursor: pointer; }
-  .empty-model p { font-size: 10px; color: var(--mid); text-align: center; line-height: 1.7; }
-  .empty-model span { font-size: 28px; }
+  /* ── GARMENT LAYER ── */
+  /* Each layer is absolute over the stack, full size, pointer-events off by default */
+  .dlayer { position:absolute; inset:0; display:none; pointer-events:none; }
+  .dlayer.on { display:block; }
 
-  /* ── DRAGGABLE OVERLAY WRAPPER ── */
-  .overlay-wrap {
-    position: absolute; inset: 0; z-index: 2;
-    /* each wrap is full-size, child img is positioned within */
-  }
-
-  .draggable-layer {
-    position: absolute;
-    cursor: grab;
-    user-select: none;
-    touch-action: none;
-    display: none; /* hidden until item selected */
-    /* default: full width, centered */
-    width: 100%; height: 100%;
-    top: 0; left: 0;
-  }
-  .draggable-layer.on { display: block; }
-  .draggable-layer:active { cursor: grabbing; }
-
-  .draggable-layer img {
-    width: 100%; height: 100%;
-    object-fit: contain; object-position: center;
-    pointer-events: none;
+  /* The inner "object" is what actually moves/scales/rotates */
+  .dlayer .gobj {
+    position:absolute;
+    /* default: centered, full height */
+    width:100%; height:100%;
+    top:0; left:0;
     transform-origin: center center;
+    pointer-events:auto;
+    cursor:grab;
+  }
+  .dlayer .gobj:active { cursor:grabbing; }
+
+  .dlayer .gobj img {
+    width:100%; height:100%;
+    object-fit:contain;
+    pointer-events:none;
+    display:block;
   }
 
-  /* resize handle — bottom-right corner */
-  .resize-handle {
-    position: absolute; bottom: -6px; right: -6px;
-    width: 18px; height: 18px;
-    background: var(--white); border: 1.5px solid var(--dark);
-    border-radius: 50%; cursor: se-resize; z-index: 10;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 8px; color: var(--dark); opacity: 0;
-    transition: opacity 0.15s;
+  /* selection box drawn on top of img */
+  .dlayer .gobj .sel-box {
+    display:none;
+    position:absolute; inset:0;
+    border:1.5px solid rgba(200,169,138,0.9);
+    border-radius:4px;
+    pointer-events:none;
   }
-  .draggable-layer:hover .resize-handle,
-  .draggable-layer.on .resize-handle { opacity: 0.7; }
-  .draggable-layer.active .resize-handle { opacity: 1; }
+  .dlayer.selected .gobj .sel-box { display:block; }
 
-  /* layer z-order */
-  #wrapTop    { z-index: 3; }
-  #wrapBottom { z-index: 4; }
-  #wrapShoes  { z-index: 5; }
+  /* ── CORNER HANDLES ── */
+  .handle {
+    position:absolute;
+    width:14px; height:14px;
+    border-radius:50%;
+    background:var(--white);
+    border:1.5px solid var(--dark);
+    pointer-events:auto;
+    z-index:10;
+  }
+  /* scale handles — corners */
+  .h-tl { top:-7px;  left:-7px;  cursor:nw-resize; }
+  .h-tr { top:-7px;  right:-7px; cursor:ne-resize; }
+  .h-bl { bottom:-7px; left:-7px;  cursor:sw-resize; }
+  .h-br { bottom:-7px; right:-7px; cursor:se-resize; }
 
-  /* ── DRAWER ── */
-  .drawer { height: var(--drawer-h); border-top: 1px solid var(--border); background: var(--white); flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; transition: height 0.35s cubic-bezier(0.4,0,0.2,1); z-index: 10; }
-  .drawer.collapsed { height: 40px; }
-  .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; flex-shrink: 0; cursor: pointer; user-select: none; }
-  .drawer-title { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); }
-  .drawer-toggle { font-size: 11px; color: var(--mid); transition: transform 0.3s; }
-  .drawer.collapsed .drawer-toggle { transform: rotate(180deg); }
-  .drawer-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 24px; flex-shrink: 0; }
-  .drawer-tab { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; padding: 8px 16px; cursor: pointer; color: var(--mid); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
-  .drawer-tab.active { color: var(--dark); border-bottom-color: var(--accent); }
-  .drawer-body { flex: 1; overflow-x: auto; overflow-y: hidden; display: flex; align-items: center; gap: 12px; padding: 12px 24px; }
-  .drawer-body::-webkit-scrollbar { height: 3px; }
-  .drawer-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-  .inv-item { flex-shrink: 0; width: 72px; height: 96px; border-radius: 10px; border: 1.5px solid var(--border); overflow: hidden; cursor: pointer; background: var(--bg); transition: all 0.15s; position: relative; }
-  .inv-item:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .inv-item.active { border-color: var(--dark); box-shadow: 0 0 0 1px var(--dark); }
-  .inv-item img { width: 100%; height: 100%; object-fit: cover; }
-  .inv-item .remove-x { position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: rgba(26,23,20,0.65); color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; cursor: pointer; z-index: 2; }
-  .inv-item:hover .remove-x { opacity: 1; }
-  .add-item-btn { flex-shrink: 0; width: 72px; height: 96px; border-radius: 10px; border: 1.5px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; background: transparent; transition: all 0.15s; color: var(--mid); }
-  .add-item-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .add-item-btn span { font-size: 20px; line-height: 1; }
-  .add-item-btn p { font-size: 8px; letter-spacing: 0.08em; text-align: center; line-height: 1.4; }
-  #itemFileInput { display: none; }
+  /* rotate handle — above top-right, styled differently */
+  .h-rot {
+    top:-32px; right:-7px;
+    background:var(--accent);
+    border-color:var(--white);
+    cursor:crosshair;
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:var(--white);
+  }
+  /* line from rotate handle to corner */
+  .h-rot::before {
+    content:''; position:absolute;
+    bottom:-11px; left:50%; transform:translateX(-50%);
+    width:1px; height:10px;
+    background:rgba(200,169,138,0.7);
+  }
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  header { animation: fadeUp 0.4s ease both; }
-  .stage  { animation: fadeUp 0.4s ease 0.08s both; }
-  .drawer { animation: fadeUp 0.4s ease 0.15s both; }
+  /* hide handles when not selected */
+  .dlayer:not(.selected) .handle { display:none; }
+
+  /* ── FLOATING MINI TOOLBAR ── */
+  #floatToolbar {
+    position:fixed; display:none; align-items:center; gap:3px;
+    background:var(--dark); border-radius:100px;
+    padding:6px 12px; z-index:400;
+    box-shadow:0 6px 24px rgba(0,0,0,0.28);
+    transform:translateX(-50%);
+  }
+  #floatToolbar.visible { display:flex; }
+  .ft-divider { width:1px; height:14px; background:rgba(255,255,255,0.15); margin:0 3px; }
+  .ft-btn { background:transparent; border:none; cursor:pointer; color:rgba(255,255,255,0.65); font-size:12px; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .ft-btn:hover { background:rgba(255,255,255,0.12); color:#fff; }
+  .ft-btn.danger:hover { background:rgba(220,60,60,0.3); color:#ff8070; }
+  .ft-cat { font-size:8px; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.35); padding:0 6px; }
+
+  /* DRAWER */
+  .drawer { height:var(--drawer-h); border-top:1px solid var(--border); background:var(--white); flex-shrink:0; display:flex; flex-direction:column; overflow:hidden; transition:height 0.35s cubic-bezier(0.4,0,0.2,1); z-index:10; }
+  .drawer.collapsed { height:40px; }
+  .drawer-header { display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:40px; flex-shrink:0; cursor:pointer; user-select:none; }
+  .drawer-title { font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--mid); }
+  .drawer-toggle { font-size:10px; color:var(--mid); transition:transform 0.3s; }
+  .drawer.collapsed .drawer-toggle { transform:rotate(180deg); }
+  .drawer-tabs { display:flex; border-bottom:1px solid var(--border); padding:0 20px; flex-shrink:0; }
+  .drawer-tab { font-size:8px; letter-spacing:0.15em; text-transform:uppercase; padding:7px 14px; cursor:pointer; color:var(--mid); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.2s; }
+  .drawer-tab.active { color:var(--dark); border-bottom-color:var(--accent); }
+  .drawer-body { flex:1; overflow-x:auto; overflow-y:hidden; display:flex; align-items:center; gap:10px; padding:10px 20px; }
+  .drawer-body::-webkit-scrollbar { height:3px; }
+  .drawer-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .inv-item { flex-shrink:0; width:68px; height:90px; border-radius:10px; border:1.5px solid var(--border); overflow:hidden; cursor:pointer; background:var(--bg); transition:all 0.15s; position:relative; }
+  .inv-item:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .inv-item.active { border-color:var(--dark); box-shadow:0 0 0 1px var(--dark); }
+  .inv-item img { width:100%; height:100%; object-fit:cover; }
+  .inv-item .rx { position:absolute; top:3px; right:3px; width:15px; height:15px; border-radius:50%; background:rgba(26,23,20,0.65); color:#fff; font-size:8px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.15s; cursor:pointer; z-index:2; }
+  .inv-item:hover .rx { opacity:1; }
+  .add-btn { flex-shrink:0; width:68px; height:90px; border-radius:10px; border:1.5px dashed var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; transition:all 0.15s; color:var(--mid); }
+  .add-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .add-btn span { font-size:18px; }
+  .add-btn p { font-size:8px; letter-spacing:0.08em; text-align:center; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  header{animation:fadeUp 0.4s ease both}
+  .stage{animation:fadeUp 0.4s ease 0.08s both}
+  .drawer{animation:fadeUp 0.4s ease 0.15s both}
 </style>
 </head>
 <body>
@@ -126,61 +160,76 @@
 <header>
   <div class="logo">DR<em>A</em>PE</div>
   <div class="header-right">
-    <label class="model-upload-btn" for="modelFileInput">＋ Set my photo</label>
+    <label class="hbtn" for="modelFileInput">＋ Set my photo</label>
     <input type="file" id="modelFileInput" accept="image/*">
-    <button class="reset-btn" onclick="resetAll()">↺ Reset positions</button>
     <span class="outfit-label" id="outfitLabel">no outfit selected</span>
   </div>
 </header>
 
 <div class="stage">
-  <!-- Left arrows -->
   <div class="arrow-col">
-    <div class="category-block">
+    <div class="cat-block">
       <span class="cat-label">Top</span>
-      <button class="arrow-btn" onclick="swipe('tops',-1)">‹</button>
-      <span class="item-counter" id="topCounter">—</span>
-      <button class="arrow-btn" onclick="swipe('tops',1)">›</button>
+      <button class="abtn" onclick="swipe('tops',-1)">‹</button>
+      <span class="ctr" id="ctrTops">—</span>
+      <button class="abtn" onclick="swipe('tops',1)">›</button>
     </div>
-    <div class="category-block">
+    <div class="cat-block">
       <span class="cat-label">Bottom</span>
-      <button class="arrow-btn" onclick="swipe('bottoms',-1)">‹</button>
-      <span class="item-counter" id="botCounter">—</span>
-      <button class="arrow-btn" onclick="swipe('bottoms',1)">›</button>
+      <button class="abtn" onclick="swipe('bottoms',-1)">‹</button>
+      <span class="ctr" id="ctrBottoms">—</span>
+      <button class="abtn" onclick="swipe('bottoms',1)">›</button>
     </div>
-    <div class="category-block">
+    <div class="cat-block">
       <span class="cat-label">Shoes</span>
-      <button class="arrow-btn" onclick="swipe('shoes',-1)">‹</button>
-      <span class="item-counter" id="shoeCounter">—</span>
-      <button class="arrow-btn" onclick="swipe('shoes',1)">›</button>
+      <button class="abtn" onclick="swipe('shoes',-1)">‹</button>
+      <span class="ctr" id="ctrShoes">—</span>
+      <button class="abtn" onclick="swipe('shoes',1)">›</button>
     </div>
   </div>
 
-  <!-- Canvas -->
   <div class="canvas-wrap" id="canvasWrap">
     <div class="model-stack" id="modelStack">
       <div class="empty-model" id="emptyModel" onclick="document.getElementById('modelFileInput').click()">
-        <span>👤</span>
-        <p>Tap to set<br>your photo</p>
+        <span>👤</span><p>Tap to set<br>your photo</p>
       </div>
-      <img id="modelBase" src="" alt="Model">
+      <img id="modelBase" alt="Model">
 
-      <!-- Top layer -->
-      <div class="draggable-layer" id="layerTop">
-        <img src="" alt="Top" id="imgTop">
-        <div class="resize-handle">⤡</div>
+      <!-- Each layer: dlayer > gobj > img + sel-box + handles -->
+      <div class="dlayer" id="layerTops" data-cat="tops">
+        <div class="gobj" id="gobjTops">
+          <img id="imgTops" alt="Top">
+          <div class="sel-box"></div>
+          <div class="handle h-tl" data-dir="scale" data-corner="tl"></div>
+          <div class="handle h-tr" data-dir="scale" data-corner="tr"></div>
+          <div class="handle h-bl" data-dir="scale" data-corner="bl"></div>
+          <div class="handle h-br" data-dir="scale" data-corner="br"></div>
+          <div class="handle h-rot" data-dir="rotate" title="Drag to rotate">↻</div>
+        </div>
       </div>
 
-      <!-- Bottom layer -->
-      <div class="draggable-layer" id="layerBottom">
-        <img src="" alt="Bottom" id="imgBottom">
-        <div class="resize-handle">⤡</div>
+      <div class="dlayer" id="layerBottoms" data-cat="bottoms">
+        <div class="gobj" id="gobjBottoms">
+          <img id="imgBottoms" alt="Bottom">
+          <div class="sel-box"></div>
+          <div class="handle h-tl" data-dir="scale" data-corner="tl"></div>
+          <div class="handle h-tr" data-dir="scale" data-corner="tr"></div>
+          <div class="handle h-bl" data-dir="scale" data-corner="bl"></div>
+          <div class="handle h-br" data-dir="scale" data-corner="br"></div>
+          <div class="handle h-rot" data-dir="rotate" title="Drag to rotate">↻</div>
+        </div>
       </div>
 
-      <!-- Shoes layer -->
-      <div class="draggable-layer" id="layerShoes">
-        <img src="" alt="Shoes" id="imgShoes">
-        <div class="resize-handle">⤡</div>
+      <div class="dlayer" id="layerShoes" data-cat="shoes">
+        <div class="gobj" id="gobjShoes">
+          <img id="imgShoes" alt="Shoes">
+          <div class="sel-box"></div>
+          <div class="handle h-tl" data-dir="scale" data-corner="tl"></div>
+          <div class="handle h-tr" data-dir="scale" data-corner="tr"></div>
+          <div class="handle h-bl" data-dir="scale" data-corner="bl"></div>
+          <div class="handle h-br" data-dir="scale" data-corner="br"></div>
+          <div class="handle h-rot" data-dir="rotate" title="Drag to rotate">↻</div>
+        </div>
       </div>
     </div>
   </div>
@@ -188,16 +237,26 @@
   <div></div>
 </div>
 
-<!-- Inventory drawer -->
+<!-- Minimal floating toolbar: layer name, z-order, reset, remove -->
+<div id="floatToolbar">
+  <span class="ft-cat" id="ftLabel">top</span>
+  <div class="ft-divider"></div>
+  <button class="ft-btn" title="Send backward" onclick="zShift(-1)">↓</button>
+  <button class="ft-btn" title="Bring forward"  onclick="zShift(1)">↑</button>
+  <div class="ft-divider"></div>
+  <button class="ft-btn" title="Reset"  onclick="resetSelected()">↺</button>
+  <button class="ft-btn danger" title="Remove" onclick="clearSelected()">✕</button>
+</div>
+
 <div class="drawer" id="drawer">
   <div class="drawer-header" onclick="toggleDrawer()">
     <span class="drawer-title">My Wardrobe</span>
     <span class="drawer-toggle">▲</span>
   </div>
   <div class="drawer-tabs">
-    <div class="drawer-tab active" onclick="switchTab('tops')"    id="tab-tops">Tops</div>
-    <div class="drawer-tab"        onclick="switchTab('bottoms')" id="tab-bottoms">Bottoms</div>
-    <div class="drawer-tab"        onclick="switchTab('shoes')"   id="tab-shoes">Shoes</div>
+    <div class="drawer-tab active" onclick="switchTab('tops')"    id="dtab-tops">Tops</div>
+    <div class="drawer-tab"        onclick="switchTab('bottoms')" id="dtab-bottoms">Bottoms</div>
+    <div class="drawer-tab"        onclick="switchTab('shoes')"   id="dtab-shoes">Shoes</div>
   </div>
   <div class="drawer-body" id="drawerBody"></div>
 </div>
@@ -206,278 +265,328 @@
 
 <script>
 // ── State ─────────────────────────────────────────────────────
-const wardrobe = { tops: [], bottoms: [], shoes: [] };
-const current  = { tops: -1, bottoms: -1, shoes: -1 };
+const wardrobe = { tops:[], bottoms:[], shoes:[] };
+const current  = { tops:-1, bottoms:-1, shoes:-1 };
 let activeTab  = 'tops';
+let selectedCat = null;
+let zOrder = ['tops','bottoms','shoes'];
 
-// Transform state per layer: { x, y, scale }
-const transforms = {
-  tops:    { x: 0, y: 0, scale: 1 },
-  bottoms: { x: 0, y: 0, scale: 1 },
-  shoes:   { x: 0, y: 0, scale: 1 },
+// Per-layer: x/y = translation in px from center, scale, rotate in deg
+const T = {
+  tops:    { x:0, y:0, scale:1, rotate:0 },
+  bottoms: { x:0, y:0, scale:1, rotate:0 },
+  shoes:   { x:0, y:0, scale:1, rotate:0 },
 };
 
-// ── Elements ──────────────────────────────────────────────────
-const modelBase  = document.getElementById('modelBase');
-const emptyModel = document.getElementById('emptyModel');
-const outfitLabel= document.getElementById('outfitLabel');
-const drawerBody = document.getElementById('drawerBody');
+const modelBase     = document.getElementById('modelBase');
+const emptyModel    = document.getElementById('emptyModel');
+const outfitLabel   = document.getElementById('outfitLabel');
+const drawerBody    = document.getElementById('drawerBody');
 const itemFileInput = document.getElementById('itemFileInput');
+const floatToolbar  = document.getElementById('floatToolbar');
+const modelStack    = document.getElementById('modelStack');
 
-const layers = {
-  tops:    document.getElementById('layerTop'),
-  bottoms: document.getElementById('layerBottom'),
-  shoes:   document.getElementById('layerShoes'),
-};
-const imgs = {
-  tops:    document.getElementById('imgTop'),
-  bottoms: document.getElementById('imgBottom'),
-  shoes:   document.getElementById('imgShoes'),
-};
-const counters = {
-  tops:    document.getElementById('topCounter'),
-  bottoms: document.getElementById('botCounter'),
-  shoes:   document.getElementById('shoeCounter'),
-};
+const layers = { tops: document.getElementById('layerTops'),    bottoms: document.getElementById('layerBottoms'),    shoes: document.getElementById('layerShoes') };
+const gobjs  = { tops: document.getElementById('gobjTops'),     bottoms: document.getElementById('gobjBottoms'),     shoes: document.getElementById('gobjShoes') };
+const imgs   = { tops: document.getElementById('imgTops'),      bottoms: document.getElementById('imgBottoms'),      shoes: document.getElementById('imgShoes') };
+const ctrs   = { tops: document.getElementById('ctrTops'),      bottoms: document.getElementById('ctrBottoms'),      shoes: document.getElementById('ctrShoes') };
 
 // ── Model photo ───────────────────────────────────────────────
-document.getElementById('modelFileInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  modelBase.src = URL.createObjectURL(file);
+document.getElementById('modelFileInput').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  modelBase.src = URL.createObjectURL(f);
   modelBase.style.display = 'block';
   emptyModel.style.display = 'none';
 });
 
-// ── Apply transform to a layer ────────────────────────────────
+// ── Apply transform to a gobj ─────────────────────────────────
 function applyTransform(cat) {
-  const { x, y, scale } = transforms[cat];
-  layers[cat].style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+  const t = T[cat];
+  gobjs[cat].style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale}) rotate(${t.rotate}deg)`;
 }
 
-function resetAll() {
-  ['tops','bottoms','shoes'].forEach(cat => {
-    transforms[cat] = { x: 0, y: 0, scale: 1 };
-    applyTransform(cat);
-  });
+function applyZOrder() {
+  zOrder.forEach((cat, i) => layers[cat].style.zIndex = i + 2);
 }
 
-// ── Drag logic ────────────────────────────────────────────────
-function makeDraggable(cat) {
-  const el = layers[cat];
-  let dragging = false, startX, startY, startTX, startTY;
-  let pinching = false, startDist, startScale;
+// ── Toolbar ───────────────────────────────────────────────────
+function positionToolbar(cat) {
+  const rect = gobjs[cat].getBoundingClientRect();
+  floatToolbar.style.left = (rect.left + rect.width / 2) + 'px';
+  floatToolbar.style.top  = Math.max(56, rect.top - 52) + 'px';
+}
 
-  // Mouse drag
-  el.addEventListener('mousedown', (e) => {
-    // ignore clicks on resize handle
-    if (e.target.classList.contains('resize-handle')) return;
-    dragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startTX = transforms[cat].x;
-    startTY = transforms[cat].y;
-    el.style.cursor = 'grabbing';
-    e.preventDefault();
+function showToolbar(cat) {
+  document.getElementById('ftLabel').textContent = cat.slice(0,-1);
+  positionToolbar(cat);
+  floatToolbar.classList.add('visible');
+}
+
+function hideToolbar() { floatToolbar.classList.remove('visible'); }
+
+function selectLayer(cat) {
+  selectedCat = cat;
+  Object.keys(layers).forEach(c => layers[c].classList.remove('selected'));
+  layers[cat].classList.add('selected');
+  showToolbar(cat);
+}
+
+function deselectAll() {
+  selectedCat = null;
+  Object.keys(layers).forEach(c => layers[c].classList.remove('selected'));
+  hideToolbar();
+}
+
+// Click canvas bg → deselect
+document.getElementById('canvasWrap').addEventListener('mousedown', e => {
+  const clickedHandle = e.target.classList.contains('handle');
+  const clickedGobj   = e.target.closest('.gobj');
+  if (!clickedHandle && !clickedGobj) deselectAll();
+});
+
+// Toolbar buttons
+function zShift(dir) {
+  if (!selectedCat) return;
+  const i = zOrder.indexOf(selectedCat), n = i + dir;
+  if (n < 0 || n >= zOrder.length) return;
+  zOrder.splice(i, 1); zOrder.splice(n, 0, selectedCat);
+  applyZOrder();
+}
+
+function resetSelected() {
+  if (!selectedCat) return;
+  T[selectedCat] = { x:0, y:0, scale:1, rotate:0 };
+  applyTransform(selectedCat);
+  positionToolbar(selectedCat);
+}
+
+function clearSelected() {
+  if (!selectedCat) return;
+  current[selectedCat] = -1;
+  applyOverlay(selectedCat); updateCounter(selectedCat); updateOutfitLabel(); renderInventory();
+  deselectAll();
+}
+
+// ── Drag / Scale / Rotate interactions ───────────────────────
+function setupInteractions(cat) {
+  const gobj  = gobjs[cat];
+  const layer = layers[cat];
+
+  // ── DRAG (body of gobj) ───────────────────────────────────
+  gobj.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('handle')) return; // handled below
+    selectLayer(cat);
+    const sx = e.clientX, sy = e.clientY;
+    const stx = T[cat].x,  sty = T[cat].y;
+
+    const onMove = ev => {
+      T[cat].x = stx + (ev.clientX - sx);
+      T[cat].y = sty + (ev.clientY - sy);
+      applyTransform(cat);
+      positionToolbar(cat);
+    };
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    e.preventDefault(); e.stopPropagation();
   });
 
-  window.addEventListener('mousemove', (e) => {
-    if (!dragging) return;
-    transforms[cat].x = startTX + (e.clientX - startX);
-    transforms[cat].y = startTY + (e.clientY - startY);
-    applyTransform(cat);
-  });
+  // Touch drag
+  let tDragging = false, tPinching = false;
+  let tsx, tsy, tstx, tsty, tsd, tss;
 
-  window.addEventListener('mouseup', () => {
-    if (dragging) { dragging = false; el.style.cursor = 'grab'; }
-  });
-
-  // Touch drag (single finger)
-  el.addEventListener('touchstart', (e) => {
+  gobj.addEventListener('touchstart', e => {
+    if (e.target.classList.contains('handle')) return;
+    selectLayer(cat);
     if (e.touches.length === 1) {
-      dragging = true;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      startTX = transforms[cat].x;
-      startTY = transforms[cat].y;
+      tDragging = true;
+      tsx = e.touches[0].clientX; tsy = e.touches[0].clientY;
+      tstx = T[cat].x; tsty = T[cat].y;
     } else if (e.touches.length === 2) {
-      dragging = false;
-      pinching = true;
-      startDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      startScale = transforms[cat].scale;
+      tDragging = false; tPinching = true;
+      tsd = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      tss = T[cat].scale;
     }
     e.preventDefault();
-  }, { passive: false });
+  }, { passive:false });
 
-  el.addEventListener('touchmove', (e) => {
-    if (dragging && e.touches.length === 1) {
-      transforms[cat].x = startTX + (e.touches[0].clientX - startX);
-      transforms[cat].y = startTY + (e.touches[0].clientY - startY);
-      applyTransform(cat);
-    } else if (pinching && e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      transforms[cat].scale = Math.max(0.2, Math.min(3, startScale * (dist / startDist)));
+  gobj.addEventListener('touchmove', e => {
+    if (tDragging && e.touches.length === 1) {
+      T[cat].x = tstx + (e.touches[0].clientX - tsx);
+      T[cat].y = tsty + (e.touches[0].clientY - tsy);
+      applyTransform(cat); positionToolbar(cat);
+    } else if (tPinching && e.touches.length === 2) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      T[cat].scale = Math.max(0.15, Math.min(3, tss * (d / tsd)));
       applyTransform(cat);
     }
     e.preventDefault();
-  }, { passive: false });
+  }, { passive:false });
 
-  el.addEventListener('touchend', () => { dragging = false; pinching = false; });
+  gobj.addEventListener('touchend', () => { tDragging = false; tPinching = false; });
 
-  // Resize handle (mouse drag on corner)
-  const handle = el.querySelector('.resize-handle');
-  handle.addEventListener('mousedown', (e) => {
-    e.stopPropagation();
-    const startEx = e.clientX;
-    const startScale = transforms[cat].scale;
-    const stack = document.getElementById('modelStack');
-    const stackW = stack.offsetWidth;
+  // ── SCALE HANDLES (corners) ───────────────────────────────
+  layer.querySelectorAll('.handle[data-dir="scale"]').forEach(handle => {
+    handle.addEventListener('mousedown', e => {
+      e.stopPropagation(); e.preventDefault();
+      selectLayer(cat);
 
-    const onMove = (ev) => {
-      const dx = ev.clientX - startEx;
-      // scale proportionally to stack width
-      transforms[cat].scale = Math.max(0.2, Math.min(3, startScale + dx / stackW * 2));
+      const corner  = handle.dataset.corner;
+      const startX  = e.clientX;
+      const startY  = e.clientY;
+      const startScale = T[cat].scale;
+      const stackRect  = modelStack.getBoundingClientRect();
+      const stackSize  = Math.min(stackRect.width, stackRect.height);
+
+      // center of the gobj in screen coords
+      const gobjRect = gobj.getBoundingClientRect();
+      const cx = gobjRect.left + gobjRect.width / 2;
+      const cy = gobjRect.top  + gobjRect.height / 2;
+      const startDist = Math.hypot(startX - cx, startY - cy);
+
+      const onMove = ev => {
+        const dist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
+        T[cat].scale = Math.max(0.15, Math.min(3, startScale * (dist / startDist)));
+        applyTransform(cat);
+      };
+      const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+  });
+
+  // ── ROTATE HANDLE ─────────────────────────────────────────
+  const rotHandle = layer.querySelector('.handle[data-dir="rotate"]');
+  rotHandle.addEventListener('mousedown', e => {
+    e.stopPropagation(); e.preventDefault();
+    selectLayer(cat);
+
+    const gobjRect = gobj.getBoundingClientRect();
+    const cx = gobjRect.left + gobjRect.width  / 2;
+    const cy = gobjRect.top  + gobjRect.height / 2;
+    const startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+    const startRot   = T[cat].rotate;
+
+    const onMove = ev => {
+      const angle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+      T[cat].rotate = startRot + (angle - startAngle);
       applyTransform(cat);
     };
-    const onUp = () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
+    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
   });
 
-  // Scroll wheel to resize
-  el.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.05 : 0.05;
-    transforms[cat].scale = Math.max(0.2, Math.min(3, transforms[cat].scale + delta));
-    applyTransform(cat);
-  }, { passive: false });
+  // Touch rotate handle
+  rotHandle.addEventListener('touchstart', e => {
+    e.stopPropagation(); e.preventDefault();
+    selectLayer(cat);
+    const gobjRect = gobj.getBoundingClientRect();
+    const cx = gobjRect.left + gobjRect.width  / 2;
+    const cy = gobjRect.top  + gobjRect.height / 2;
+    const t0 = e.touches[0];
+    const startAngle = Math.atan2(t0.clientY - cy, t0.clientX - cx) * 180 / Math.PI;
+    const startRot   = T[cat].rotate;
+
+    const onMove = ev => {
+      const t = ev.touches[0];
+      const angle = Math.atan2(t.clientY - cy, t.clientX - cx) * 180 / Math.PI;
+      T[cat].rotate = startRot + (angle - startAngle);
+      applyTransform(cat);
+    };
+    const onEnd = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
+    window.addEventListener('touchmove', onMove, { passive:false });
+    window.addEventListener('touchend', onEnd);
+  }, { passive:false });
 }
 
-// Init drag for all layers
-['tops','bottoms','shoes'].forEach(makeDraggable);
+['tops','bottoms','shoes'].forEach(setupInteractions);
 
-// ── Wardrobe logic ────────────────────────────────────────────
+// ── Wardrobe ──────────────────────────────────────────────────
 function swipe(cat, dir) {
-  const items = wardrobe[cat];
-  if (!items.length) return;
+  const items = wardrobe[cat]; if (!items.length) return;
   let idx = current[cat] + dir;
   if (idx < -1) idx = items.length - 1;
   if (idx >= items.length) idx = -1;
   current[cat] = idx;
-  applyOverlay(cat);
-  updateCounter(cat);
-  updateOutfitLabel();
-  renderInventory();
+  applyOverlay(cat); updateCounter(cat); updateOutfitLabel(); renderInventory();
+  if (idx >= 0) selectLayer(cat); else deselectAll();
 }
 
 function jumpTo(cat, idx) {
   current[cat] = idx;
-  applyOverlay(cat);
-  updateCounter(cat);
-  updateOutfitLabel();
-  renderInventory();
+  applyOverlay(cat); updateCounter(cat); updateOutfitLabel(); renderInventory();
+  selectLayer(cat);
 }
 
 function applyOverlay(cat) {
-  const layer = layers[cat];
-  const img   = imgs[cat];
-  const idx   = current[cat];
-  if (idx === -1) {
-    img.src = '';
-    layer.classList.remove('on');
-  } else {
-    img.src = wardrobe[cat][idx].url;
-    layer.classList.add('on');
-  }
+  const idx = current[cat];
+  if (idx === -1) { imgs[cat].src = ''; layers[cat].classList.remove('on'); }
+  else            { imgs[cat].src = wardrobe[cat][idx].url; layers[cat].classList.add('on'); }
 }
 
 function updateCounter(cat) {
-  const items = wardrobe[cat];
-  const idx   = current[cat];
-  counters[cat].textContent = items.length
-    ? (idx === -1 ? `—/${items.length}` : `${idx+1}/${items.length}`)
-    : '—';
+  const items = wardrobe[cat], idx = current[cat];
+  ctrs[cat].textContent = items.length ? (idx===-1 ? `—/${items.length}` : `${idx+1}/${items.length}`) : '—';
 }
 
 function updateOutfitLabel() {
   const parts = [];
-  if (current.tops    >= 0) parts.push(wardrobe.tops[current.tops].name);
-  if (current.bottoms >= 0) parts.push(wardrobe.bottoms[current.bottoms].name);
-  if (current.shoes   >= 0) parts.push(wardrobe.shoes[current.shoes].name);
+  if (current.tops>=0)    parts.push(wardrobe.tops[current.tops].name);
+  if (current.bottoms>=0) parts.push(wardrobe.bottoms[current.bottoms].name);
+  if (current.shoes>=0)   parts.push(wardrobe.shoes[current.shoes].name);
   outfitLabel.textContent = parts.length ? parts.join(' · ') : 'no outfit selected';
 }
 
 let pendingCat = null;
-function addItem(cat) {
-  pendingCat = cat;
-  itemFileInput.value = '';
-  itemFileInput.click();
-}
+function addItem(cat) { pendingCat = cat; itemFileInput.value = ''; itemFileInput.click(); }
 
-itemFileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file || !pendingCat) return;
-  const url  = URL.createObjectURL(file);
-  const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+itemFileInput.addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f || !pendingCat) return;
+  const url  = URL.createObjectURL(f);
+  const name = f.name.replace(/\.[^.]+$/,'').replace(/[-_]/g,' ');
   wardrobe[pendingCat].push({ url, name });
   current[pendingCat] = wardrobe[pendingCat].length - 1;
-  applyOverlay(pendingCat);
-  updateCounter(pendingCat);
-  updateOutfitLabel();
-  renderInventory();
+  applyOverlay(pendingCat); updateCounter(pendingCat); updateOutfitLabel(); renderInventory();
+  selectLayer(pendingCat);
 });
 
 function removeItem(cat, idx, e) {
   e.stopPropagation();
   wardrobe[cat].splice(idx, 1);
   if (current[cat] >= wardrobe[cat].length) current[cat] = wardrobe[cat].length - 1;
-  applyOverlay(cat);
-  updateCounter(cat);
-  updateOutfitLabel();
-  renderInventory();
+  applyOverlay(cat); updateCounter(cat); updateOutfitLabel(); renderInventory();
 }
 
 function renderInventory() {
-  const cat   = activeTab;
-  const items = wardrobe[cat];
+  const cat = activeTab, items = wardrobe[cat];
   drawerBody.innerHTML = '';
   items.forEach((item, i) => {
     const el = document.createElement('div');
-    el.className = 'inv-item' + (current[cat] === i ? ' active' : '');
-    el.innerHTML = `<img src="${item.url}" alt="${item.name}"><div class="remove-x" onclick="removeItem('${cat}',${i},event)">✕</div>`;
+    el.className = 'inv-item' + (current[cat]===i ? ' active' : '');
+    el.innerHTML = `<img src="${item.url}" alt="${item.name}"><div class="rx" onclick="removeItem('${cat}',${i},event)">✕</div>`;
     el.addEventListener('click', () => jumpTo(cat, i));
     drawerBody.appendChild(el);
   });
-  const addBtn = document.createElement('div');
-  addBtn.className = 'add-item-btn';
-  addBtn.innerHTML = `<span>＋</span><p>Add ${cat.slice(0,-1)}</p>`;
-  addBtn.onclick = () => addItem(cat);
-  drawerBody.appendChild(addBtn);
+  const ab = document.createElement('div');
+  ab.className = 'add-btn';
+  ab.innerHTML = `<span>＋</span><p>Add ${cat.slice(0,-1)}</p>`;
+  ab.onclick = () => addItem(cat);
+  drawerBody.appendChild(ab);
 }
 
 function switchTab(cat) {
   activeTab = cat;
   document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + cat).classList.add('active');
+  document.getElementById('dtab-'+cat).classList.add('active');
   renderInventory();
 }
 
-function toggleDrawer() {
-  document.getElementById('drawer').classList.toggle('collapsed');
-}
+function toggleDrawer() { document.getElementById('drawer').classList.toggle('collapsed'); }
 
-// Init
+applyZOrder();
 renderInventory();
-Object.keys(wardrobe).forEach(updateCounter);
+['tops','bottoms','shoes'].forEach(updateCounter);
 </script>
 </body>
 </html>
