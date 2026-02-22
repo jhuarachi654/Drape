@@ -171,13 +171,23 @@
   let personB64  = null;
   let garmentB64 = null;
 
-  // ── Helpers ───────────────────────────────────────────────────
+  // ── Resize + compress image to base64 (keeps requests small) ──
   function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = (e) => resolve(e.target.result); // includes data:mime;base64, prefix
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1024;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else       { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = URL.createObjectURL(file);
     });
   }
 
