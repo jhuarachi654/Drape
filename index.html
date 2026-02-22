@@ -27,7 +27,6 @@
     overflow-x: hidden;
   }
 
-  /* Grain overlay */
   body::before {
     content: '';
     position: fixed;
@@ -54,10 +53,7 @@
     color: var(--dark);
   }
 
-  .logo span {
-    font-style: italic;
-    color: var(--accent);
-  }
+  .logo span { font-style: italic; color: var(--accent); }
 
   .status-bar {
     font-size: 10px;
@@ -73,7 +69,6 @@
     height: calc(100vh - 73px);
   }
 
-  /* LEFT PANEL */
   .panel-left {
     border-right: 1px solid var(--border);
     padding: 32px 24px;
@@ -103,10 +98,7 @@
     overflow: hidden;
   }
 
-  .upload-zone:hover {
-    border-color: var(--accent);
-    background: rgba(200,169,138,0.06);
-  }
+  .upload-zone:hover { border-color: var(--accent); background: rgba(200,169,138,0.06); }
 
   .upload-zone input {
     position: absolute;
@@ -117,18 +109,8 @@
     height: 100%;
   }
 
-  .upload-icon {
-    font-size: 24px;
-    margin-bottom: 8px;
-    display: block;
-  }
-
-  .upload-zone p {
-    font-size: 10px;
-    color: var(--mid);
-    letter-spacing: 0.05em;
-    line-height: 1.5;
-  }
+  .upload-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .upload-zone p { font-size: 10px; color: var(--mid); letter-spacing: 0.05em; line-height: 1.5; }
 
   .garment-preview {
     width: 100%;
@@ -171,17 +153,9 @@
     margin-top: auto;
   }
 
-  .try-btn:hover:not(:disabled) {
-    background: var(--accent);
-    color: var(--dark);
-  }
+  .try-btn:hover:not(:disabled) { background: var(--accent); color: var(--dark); }
+  .try-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .try-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  /* CENTER CANVAS */
   .canvas-area {
     display: flex;
     align-items: center;
@@ -191,8 +165,6 @@
     overflow: hidden;
   }
 
-
-
   .model-container {
     position: relative;
     height: 85%;
@@ -200,7 +172,6 @@
     aspect-ratio: 2/3;
     border-radius: 0;
     overflow: hidden;
-    box-shadow: none;
   }
 
   .model-img {
@@ -238,10 +209,7 @@
     backdrop-filter: blur(4px);
   }
 
-  .loading-overlay.active {
-    opacity: 1;
-    pointer-events: all;
-  }
+  .loading-overlay.active { opacity: 1; pointer-events: all; }
 
   .spinner {
     width: 32px;
@@ -254,14 +222,8 @@
 
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .loading-text {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    color: var(--mid);
-    text-transform: uppercase;
-  }
+  .loading-text { font-size: 10px; letter-spacing: 0.15em; color: var(--mid); text-transform: uppercase; }
 
-  /* RIGHT PANEL */
   .panel-right {
     border-left: 1px solid var(--border);
     padding: 32px 24px;
@@ -300,16 +262,9 @@
 
   .api-input:focus { border-color: var(--accent); }
 
-  .api-hint {
-    font-size: 9px;
-    color: var(--mid);
-    margin-top: 6px;
-    line-height: 1.5;
-  }
+  .api-hint { font-size: 9px; color: var(--mid); margin-top: 6px; line-height: 1.5; }
 
-  .result-section {
-    margin-top: 8px;
-  }
+  .result-section { margin-top: 8px; }
 
   .result-card {
     background: var(--white);
@@ -322,13 +277,7 @@
     justify-content: center;
   }
 
-  .result-placeholder {
-    font-size: 10px;
-    color: var(--mid);
-    text-align: center;
-    letter-spacing: 0.05em;
-    line-height: 1.8;
-  }
+  .result-placeholder { font-size: 10px; color: var(--mid); text-align: center; letter-spacing: 0.05em; line-height: 1.8; }
 
   .download-btn {
     width: 100%;
@@ -347,11 +296,7 @@
     display: none;
   }
 
-  .download-btn:hover {
-    background: var(--dark);
-    color: var(--white);
-  }
-
+  .download-btn:hover { background: var(--dark); color: var(--white); }
   .download-btn.visible { display: block; }
 
   .error-msg {
@@ -368,15 +313,19 @@
 
   .error-msg.visible { display: block; }
 
-  /* Animations */
+  .size-hint {
+    font-size: 9px;
+    color: var(--mid);
+    margin-top: 6px;
+    text-align: center;
+  }
+
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  header, .panel-left, .canvas-area, .panel-right {
-    animation: fadeUp 0.5s ease both;
-  }
+  header, .panel-left, .canvas-area, .panel-right { animation: fadeUp 0.5s ease both; }
   .panel-left { animation-delay: 0.1s; }
   .canvas-area { animation-delay: 0.15s; }
   .panel-right { animation-delay: 0.2s; }
@@ -401,6 +350,7 @@
         <p>Upload clothing<br>item photo</p>
       </div>
       <img class="garment-preview" id="garmentPreview" alt="Garment preview">
+      <div class="size-hint" id="sizeHint"></div>
     </div>
 
     <div>
@@ -420,8 +370,7 @@
   <!-- CENTER: Model canvas -->
   <div class="canvas-area">
     <div class="model-container">
-      <!-- Replace src with your actual photo path -->
-      <img class="model-img" id="modelImg" src="https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.svg" alt="Model">
+      <img class="model-img" id="modelImg" src="https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna_2_6_1.png" alt="Model">
       <img class="result-img" id="resultImg" alt="Try-on result">
       <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
@@ -463,53 +412,70 @@
   const tryBtn = document.getElementById('tryBtn');
   const loadingOverlay = document.getElementById('loadingOverlay');
   const resultImg = document.getElementById('resultImg');
-  const resultCard = document.getElementById('resultCard');
   const downloadBtn = document.getElementById('downloadBtn');
   const errorMsg = document.getElementById('errorMsg');
   const apiKeyInput = document.getElementById('apiKeyInput');
   const categorySelect = document.getElementById('categorySelect');
-  const modelImg = document.getElementById('modelImg');
+  const sizeHint = document.getElementById('sizeHint');
+
+  // Model image — hosted on GitHub as a real PNG
+  const MODEL_IMAGE_URL = 'https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna_2_6_1.png';
 
   let garmentDataUrl = null;
-  let modelDataUrl = null;
 
-  // Load model image as base64
-  async function loadModelAsBase64() {
-    try {
-      const response = await fetch(modelImg.src);
-      const blob = await response.blob();
-      return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+  // Compress image to stay well under Vercel's 4.5MB limit
+  function compressImage(file, maxWidth = 1024, quality = 0.82) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = url;
+    });
   }
 
-  garmentInput.addEventListener('change', (e) => {
+  garmentInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      garmentDataUrl = ev.target.result;
-      garmentPreview.src = garmentDataUrl;
-      garmentPreview.classList.add('visible');
-      document.getElementById('uploadZone').style.display = 'none';
-      updateTryBtn();
-    };
-    reader.readAsDataURL(file);
-  });
 
-  function updateTryBtn() {
-    tryBtn.disabled = !garmentDataUrl;
-  }
+    // Show preview immediately from original
+    const previewUrl = URL.createObjectURL(file);
+    garmentPreview.src = previewUrl;
+    garmentPreview.classList.add('visible');
+    document.getElementById('uploadZone').style.display = 'none';
+    sizeHint.textContent = 'Compressing…';
+    tryBtn.disabled = true;
+
+    // Compress for API
+    garmentDataUrl = await compressImage(file);
+
+    // Show compressed size
+    const bytes = Math.round((garmentDataUrl.length * 3) / 4);
+    const kb = Math.round(bytes / 1024);
+    sizeHint.textContent = `Compressed: ~${kb}KB`;
+
+    tryBtn.disabled = false;
+  });
 
   tryBtn.addEventListener('click', async () => {
     const apiKey = apiKeyInput.value.trim();
     if (!apiKey) {
       showError('Please enter your Fashn.ai API key in the right panel.');
+      return;
+    }
+    if (!garmentDataUrl) {
+      showError('Please upload a garment image first.');
       return;
     }
 
@@ -518,45 +484,51 @@
     tryBtn.disabled = true;
 
     try {
-      // Use hosted model image URL directly
-      modelDataUrl = 'https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.svg';
-
       // Step 1: Start the try-on job
       const runRes = await fetch('/api/tryon', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model_image: modelDataUrl,
+          model_image: MODEL_IMAGE_URL,
           garment_image: garmentDataUrl,
           category: categorySelect.value,
-          api_key: apiKey
-        })
+          api_key: apiKey,
+        }),
       });
 
-      const runData = await runRes.json();
+      let runData;
+      const runText = await runRes.text();
+      try {
+        runData = JSON.parse(runText);
+      } catch {
+        throw new Error(`Server error: ${runText.slice(0, 200)}`);
+      }
 
       if (!runRes.ok) {
-        throw new Error(runData.detail || runData.error || 'API error');
+        throw new Error(runData.detail || runData.error || `API error ${runRes.status}`);
       }
 
       const predictionId = runData.id;
+      if (!predictionId) throw new Error('No prediction ID returned from Fashn.ai');
 
       // Step 2: Poll for result
       let result = null;
       for (let i = 0; i < 60; i++) {
         await sleep(2000);
-        const statusRes = await fetch(`/api/status?id=${predictionId}&api_key=${encodeURIComponent(apiKey)}`, {
-          headers: {}
-        });
-        const statusData = await statusRes.json();
+        const statusRes = await fetch(`/api/status?id=${predictionId}&api_key=${encodeURIComponent(apiKey)}`);
+        const statusText = await statusRes.text();
+        let statusData;
+        try {
+          statusData = JSON.parse(statusText);
+        } catch {
+          throw new Error(`Status error: ${statusText.slice(0, 200)}`);
+        }
 
         if (statusData.status === 'completed') {
-          result = statusData.output[0];
+          result = Array.isArray(statusData.output) ? statusData.output[0] : statusData.output;
           break;
         } else if (statusData.status === 'failed') {
-          throw new Error(statusData.error || 'Processing failed');
+          throw new Error(statusData.error || 'Processing failed on Fashn.ai');
         }
       }
 
@@ -565,7 +537,6 @@
       // Show result
       resultImg.src = result;
       resultImg.classList.add('visible');
-
       downloadBtn.classList.add('visible');
       downloadBtn.onclick = () => {
         const a = document.createElement('a');
