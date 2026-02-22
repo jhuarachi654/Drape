@@ -10,7 +10,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // API key goes in Authorization header, NOT as a query param
     const response = await fetch(`https://api.fashn.ai/v1/status/${id}`, {
       headers: {
         'Authorization': `Bearer ${api_key}`,
