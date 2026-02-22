@@ -137,8 +137,8 @@
 
   const MODEL_IMAGE_URL = 'https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.png';
   
-  // Free image hosting API (ImgBB)
-  const IMGBB_API_KEY = '6b8a2c0b6b8a2c0b6b8a2c0b6b8a2c0b'; // This is a public test key - replace with your own
+  // Your ImgBB API key
+  const IMGBB_API_KEY = '9272cae259ec202c877e982b848b3e16';
 
   let garmentFile = null;
 
@@ -176,7 +176,8 @@
     });
 
     if (!response.ok) {
-      throw new Error('Failed to upload image');
+      const error = await response.text();
+      throw new Error('Failed to upload image: ' + error);
     }
 
     const data = await response.json();
@@ -190,13 +191,13 @@
 
     errorMsg.classList.remove('visible');
     loadingOverlay.classList.add('active');
-    loadingText.textContent = 'Uploading garment…';
+    loadingText.textContent = 'Uploading garment to ImgBB…';
     tryBtn.disabled = true;
 
     try {
       // Upload to ImgBB first
       const garmentUrl = await uploadToImgBB(garmentFile);
-      console.log('Uploaded to:', garmentUrl);
+      console.log('✅ Uploaded to ImgBB:', garmentUrl);
 
       // Map categories for Fashn.ai
       const categoryMap = {
@@ -206,7 +207,7 @@
       };
 
       // Start the Fashn.ai process
-      loadingText.textContent = 'Starting virtual try-on…';
+      loadingText.textContent = 'Starting virtual try-on with Fashn.ai…';
       
       const runResponse = await fetch('https://api.fashn.ai/v1/run', {
         method: 'POST',
@@ -224,6 +225,7 @@
       });
 
       const runData = await runResponse.json();
+      console.log('✅ Fashn.ai response:', runData);
       
       if (!runResponse.ok) {
         throw new Error(runData.message || runData.error || 'Failed to start try-on');
@@ -249,12 +251,11 @@
         });
         
         const statusData = await statusResponse.json();
+        console.log(`⏳ Attempt ${attempts}:`, statusData);
 
         if (!statusResponse.ok) {
           throw new Error(statusData.error || 'Status check failed');
         }
-
-        console.log('Status:', statusData);
 
         if (statusData.status === 'completed') {
           // Handle different response formats
@@ -279,6 +280,8 @@
         throw new Error('Timed out waiting for result');
       }
 
+      console.log('✅ Got result:', result);
+      
       // Display the result
       resultImg.src = result;
       resultImg.classList.add('visible');
@@ -296,7 +299,7 @@
       };
 
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Error:', err);
       showError(`Error: ${err.message}`);
     } finally {
       loadingOverlay.classList.remove('active');
