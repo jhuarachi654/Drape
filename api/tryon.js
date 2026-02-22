@@ -25,9 +25,14 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${api_key}`,
       },
       body: JSON.stringify({
-        model_image,
-        garment_image,
-        category,
+        model_name: 'tryon-v1.6',
+        inputs: {
+          model_image,
+          garment_image,
+          category,
+          mode: 'quality',
+          garment_photo_type: 'auto',
+        },
       }),
     });
 
