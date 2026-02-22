@@ -37,12 +37,11 @@ export default async function handler(req, res) {
     });
 
     const text = await response.text();
-
     let data;
     try {
       data = JSON.parse(text);
     } catch {
-      return res.status(500).json({ error: `Fashn.ai returned non-JSON: ${text.slice(0, 200)}` });
+      return res.status(500).json({ error: `Fashn.ai returned non-JSON: ${text.slice(0, 300)}` });
     }
 
     return res.status(response.status).json(data);
