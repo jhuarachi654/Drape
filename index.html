@@ -14,14 +14,18 @@
   }
   body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--dark); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
   body::before { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 200; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); opacity: 0.6; }
+
   header { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--bg); z-index: 10; }
   .logo { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; letter-spacing: 0.22em; }
   .logo em { font-style: italic; color: var(--accent); }
-  .header-right { display: flex; align-items: center; gap: 20px; }
+  .header-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .model-upload-btn { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mid); cursor: pointer; border: 1px solid var(--border); padding: 7px 14px; border-radius: 100px; background: var(--white); transition: all 0.2s; white-space: nowrap; }
   .model-upload-btn:hover { border-color: var(--accent); color: var(--dark); }
   #modelFileInput { display: none; }
-  .outfit-label { font-size: 9px; letter-spacing: 0.15em; color: var(--mid); text-transform: uppercase; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .outfit-label { font-size: 9px; letter-spacing: 0.12em; color: var(--mid); text-transform: uppercase; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reset-btn { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mid); cursor: pointer; border: 1px solid var(--border); padding: 7px 14px; border-radius: 100px; background: transparent; transition: all 0.2s; white-space: nowrap; }
+  .reset-btn:hover { border-color: var(--dark); color: var(--dark); }
+
   .stage { flex: 1; display: grid; grid-template-columns: 72px 1fr 72px; align-items: center; overflow: hidden; position: relative; }
   .arrow-col { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; height: 100%; padding: 16px 0; }
   .category-block { display: flex; flex-direction: column; align-items: center; gap: 6px; }
@@ -30,18 +34,63 @@
   .arrow-btn:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--white); }
   .arrow-btn:disabled { opacity: 0.2; cursor: not-allowed; }
   .item-counter { font-size: 8px; color: var(--mid); letter-spacing: 0.1em; text-align: center; min-width: 28px; }
+
   .canvas-wrap { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .model-stack { position: relative; height: 90%; max-height: 620px; aspect-ratio: 9/16; }
-  .model-stack img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; }
-  #modelBase { z-index: 1; }
-  #overlayTop { z-index: 2; }
-  #overlayBottom { z-index: 3; }
-  #overlayShoes { z-index: 4; }
+
+  /* base model — not draggable */
+  #modelBase { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; z-index: 1; display: none; }
+
   .empty-model { position: absolute; inset: 0; z-index: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 1.5px dashed var(--border); border-radius: 20px; background: var(--white); cursor: pointer; }
   .empty-model p { font-size: 10px; color: var(--mid); text-align: center; line-height: 1.7; }
   .empty-model span { font-size: 28px; }
-  #overlayTop, #overlayBottom, #overlayShoes { opacity: 0; transition: opacity 0.3s ease; }
-  #overlayTop.on, #overlayBottom.on, #overlayShoes.on { opacity: 1; }
+
+  /* ── DRAGGABLE OVERLAY WRAPPER ── */
+  .overlay-wrap {
+    position: absolute; inset: 0; z-index: 2;
+    /* each wrap is full-size, child img is positioned within */
+  }
+
+  .draggable-layer {
+    position: absolute;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    display: none; /* hidden until item selected */
+    /* default: full width, centered */
+    width: 100%; height: 100%;
+    top: 0; left: 0;
+  }
+  .draggable-layer.on { display: block; }
+  .draggable-layer:active { cursor: grabbing; }
+
+  .draggable-layer img {
+    width: 100%; height: 100%;
+    object-fit: contain; object-position: center;
+    pointer-events: none;
+    transform-origin: center center;
+  }
+
+  /* resize handle — bottom-right corner */
+  .resize-handle {
+    position: absolute; bottom: -6px; right: -6px;
+    width: 18px; height: 18px;
+    background: var(--white); border: 1.5px solid var(--dark);
+    border-radius: 50%; cursor: se-resize; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; color: var(--dark); opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .draggable-layer:hover .resize-handle,
+  .draggable-layer.on .resize-handle { opacity: 0.7; }
+  .draggable-layer.active .resize-handle { opacity: 1; }
+
+  /* layer z-order */
+  #wrapTop    { z-index: 3; }
+  #wrapBottom { z-index: 4; }
+  #wrapShoes  { z-index: 5; }
+
+  /* ── DRAWER ── */
   .drawer { height: var(--drawer-h); border-top: 1px solid var(--border); background: var(--white); flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; transition: height 0.35s cubic-bezier(0.4,0,0.2,1); z-index: 10; }
   .drawer.collapsed { height: 40px; }
   .drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; flex-shrink: 0; cursor: pointer; user-select: none; }
@@ -65,6 +114,7 @@
   .add-item-btn span { font-size: 20px; line-height: 1; }
   .add-item-btn p { font-size: 8px; letter-spacing: 0.08em; text-align: center; line-height: 1.4; }
   #itemFileInput { display: none; }
+
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   header { animation: fadeUp 0.4s ease both; }
   .stage  { animation: fadeUp 0.4s ease 0.08s both; }
@@ -78,11 +128,13 @@
   <div class="header-right">
     <label class="model-upload-btn" for="modelFileInput">＋ Set my photo</label>
     <input type="file" id="modelFileInput" accept="image/*">
+    <button class="reset-btn" onclick="resetAll()">↺ Reset positions</button>
     <span class="outfit-label" id="outfitLabel">no outfit selected</span>
   </div>
 </header>
 
 <div class="stage">
+  <!-- Left arrows -->
   <div class="arrow-col">
     <div class="category-block">
       <span class="cat-label">Top</span>
@@ -104,22 +156,39 @@
     </div>
   </div>
 
-  <div class="canvas-wrap">
-    <div class="model-stack">
+  <!-- Canvas -->
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="model-stack" id="modelStack">
       <div class="empty-model" id="emptyModel" onclick="document.getElementById('modelFileInput').click()">
         <span>👤</span>
         <p>Tap to set<br>your photo</p>
       </div>
-      <img id="modelBase" src="" alt="Model" style="display:none;">
-      <img id="overlayTop"    src="" alt="Top">
-      <img id="overlayBottom" src="" alt="Bottom">
-      <img id="overlayShoes"  src="" alt="Shoes">
+      <img id="modelBase" src="" alt="Model">
+
+      <!-- Top layer -->
+      <div class="draggable-layer" id="layerTop">
+        <img src="" alt="Top" id="imgTop">
+        <div class="resize-handle">⤡</div>
+      </div>
+
+      <!-- Bottom layer -->
+      <div class="draggable-layer" id="layerBottom">
+        <img src="" alt="Bottom" id="imgBottom">
+        <div class="resize-handle">⤡</div>
+      </div>
+
+      <!-- Shoes layer -->
+      <div class="draggable-layer" id="layerShoes">
+        <img src="" alt="Shoes" id="imgShoes">
+        <div class="resize-handle">⤡</div>
+      </div>
     </div>
   </div>
 
   <div></div>
 </div>
 
+<!-- Inventory drawer -->
 <div class="drawer" id="drawer">
   <div class="drawer-header" onclick="toggleDrawer()">
     <span class="drawer-title">My Wardrobe</span>
@@ -136,139 +205,279 @@
 <input type="file" id="itemFileInput" accept="image/*">
 
 <script>
-  const wardrobe = { tops: [], bottoms: [], shoes: [] };
-  const current  = { tops: -1, bottoms: -1, shoes: -1 };
-  let activeTab  = 'tops';
+// ── State ─────────────────────────────────────────────────────
+const wardrobe = { tops: [], bottoms: [], shoes: [] };
+const current  = { tops: -1, bottoms: -1, shoes: -1 };
+let activeTab  = 'tops';
 
-  const modelBase     = document.getElementById('modelBase');
-  const emptyModel    = document.getElementById('emptyModel');
-  const overlayTop    = document.getElementById('overlayTop');
-  const overlayBottom = document.getElementById('overlayBottom');
-  const overlayShoes  = document.getElementById('overlayShoes');
-  const outfitLabel   = document.getElementById('outfitLabel');
-  const drawerBody    = document.getElementById('drawerBody');
-  const itemFileInput = document.getElementById('itemFileInput');
+// Transform state per layer: { x, y, scale }
+const transforms = {
+  tops:    { x: 0, y: 0, scale: 1 },
+  bottoms: { x: 0, y: 0, scale: 1 },
+  shoes:   { x: 0, y: 0, scale: 1 },
+};
 
-  const overlays = { tops: overlayTop, bottoms: overlayBottom, shoes: overlayShoes };
-  const counters = {
-    tops:    document.getElementById('topCounter'),
-    bottoms: document.getElementById('botCounter'),
-    shoes:   document.getElementById('shoeCounter'),
-  };
+// ── Elements ──────────────────────────────────────────────────
+const modelBase  = document.getElementById('modelBase');
+const emptyModel = document.getElementById('emptyModel');
+const outfitLabel= document.getElementById('outfitLabel');
+const drawerBody = document.getElementById('drawerBody');
+const itemFileInput = document.getElementById('itemFileInput');
 
-  document.getElementById('modelFileInput').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    modelBase.src = URL.createObjectURL(file);
-    modelBase.style.display = 'block';
-    emptyModel.style.display = 'none';
+const layers = {
+  tops:    document.getElementById('layerTop'),
+  bottoms: document.getElementById('layerBottom'),
+  shoes:   document.getElementById('layerShoes'),
+};
+const imgs = {
+  tops:    document.getElementById('imgTop'),
+  bottoms: document.getElementById('imgBottom'),
+  shoes:   document.getElementById('imgShoes'),
+};
+const counters = {
+  tops:    document.getElementById('topCounter'),
+  bottoms: document.getElementById('botCounter'),
+  shoes:   document.getElementById('shoeCounter'),
+};
+
+// ── Model photo ───────────────────────────────────────────────
+document.getElementById('modelFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  modelBase.src = URL.createObjectURL(file);
+  modelBase.style.display = 'block';
+  emptyModel.style.display = 'none';
+});
+
+// ── Apply transform to a layer ────────────────────────────────
+function applyTransform(cat) {
+  const { x, y, scale } = transforms[cat];
+  layers[cat].style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function resetAll() {
+  ['tops','bottoms','shoes'].forEach(cat => {
+    transforms[cat] = { x: 0, y: 0, scale: 1 };
+    applyTransform(cat);
+  });
+}
+
+// ── Drag logic ────────────────────────────────────────────────
+function makeDraggable(cat) {
+  const el = layers[cat];
+  let dragging = false, startX, startY, startTX, startTY;
+  let pinching = false, startDist, startScale;
+
+  // Mouse drag
+  el.addEventListener('mousedown', (e) => {
+    // ignore clicks on resize handle
+    if (e.target.classList.contains('resize-handle')) return;
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    startTX = transforms[cat].x;
+    startTY = transforms[cat].y;
+    el.style.cursor = 'grabbing';
+    e.preventDefault();
   });
 
-  function swipe(cat, dir) {
-    const items = wardrobe[cat];
-    if (!items.length) return;
-    let idx = current[cat] + dir;
-    if (idx < -1) idx = items.length - 1;
-    if (idx >= items.length) idx = -1;
-    current[cat] = idx;
-    applyOverlay(cat);
-    updateCounter(cat);
-    updateOutfitLabel();
-    renderInventory();
-  }
-
-  function jumpTo(cat, idx) {
-    current[cat] = idx;
-    applyOverlay(cat);
-    updateCounter(cat);
-    updateOutfitLabel();
-    renderInventory();
-  }
-
-  function applyOverlay(cat) {
-    const el  = overlays[cat];
-    const idx = current[cat];
-    if (idx === -1) { el.src = ''; el.classList.remove('on'); }
-    else            { el.src = wardrobe[cat][idx].url; el.classList.add('on'); }
-  }
-
-  function updateCounter(cat) {
-    const items = wardrobe[cat];
-    const idx   = current[cat];
-    counters[cat].textContent = items.length
-      ? (idx === -1 ? `—/${items.length}` : `${idx+1}/${items.length}`)
-      : '—';
-  }
-
-  function updateOutfitLabel() {
-    const parts = [];
-    if (current.tops    >= 0) parts.push(wardrobe.tops[current.tops].name);
-    if (current.bottoms >= 0) parts.push(wardrobe.bottoms[current.bottoms].name);
-    if (current.shoes   >= 0) parts.push(wardrobe.shoes[current.shoes].name);
-    outfitLabel.textContent = parts.length ? parts.join(' · ') : 'no outfit selected';
-  }
-
-  let pendingCat = null;
-  function addItem(cat) {
-    pendingCat = cat;
-    itemFileInput.value = '';
-    itemFileInput.click();
-  }
-
-  itemFileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file || !pendingCat) return;
-    const url  = URL.createObjectURL(file);
-    const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
-    wardrobe[pendingCat].push({ url, name });
-    current[pendingCat] = wardrobe[pendingCat].length - 1;
-    applyOverlay(pendingCat);
-    updateCounter(pendingCat);
-    updateOutfitLabel();
-    renderInventory();
+  window.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    transforms[cat].x = startTX + (e.clientX - startX);
+    transforms[cat].y = startTY + (e.clientY - startY);
+    applyTransform(cat);
   });
 
-  function removeItem(cat, idx, e) {
+  window.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; el.style.cursor = 'grab'; }
+  });
+
+  // Touch drag (single finger)
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      dragging = true;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTX = transforms[cat].x;
+      startTY = transforms[cat].y;
+    } else if (e.touches.length === 2) {
+      dragging = false;
+      pinching = true;
+      startDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      startScale = transforms[cat].scale;
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  el.addEventListener('touchmove', (e) => {
+    if (dragging && e.touches.length === 1) {
+      transforms[cat].x = startTX + (e.touches[0].clientX - startX);
+      transforms[cat].y = startTY + (e.touches[0].clientY - startY);
+      applyTransform(cat);
+    } else if (pinching && e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      transforms[cat].scale = Math.max(0.2, Math.min(3, startScale * (dist / startDist)));
+      applyTransform(cat);
+    }
+    e.preventDefault();
+  }, { passive: false });
+
+  el.addEventListener('touchend', () => { dragging = false; pinching = false; });
+
+  // Resize handle (mouse drag on corner)
+  const handle = el.querySelector('.resize-handle');
+  handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
-    wardrobe[cat].splice(idx, 1);
-    if (current[cat] >= wardrobe[cat].length) current[cat] = wardrobe[cat].length - 1;
-    applyOverlay(cat);
-    updateCounter(cat);
-    updateOutfitLabel();
-    renderInventory();
-  }
+    const startEx = e.clientX;
+    const startScale = transforms[cat].scale;
+    const stack = document.getElementById('modelStack');
+    const stackW = stack.offsetWidth;
 
-  function renderInventory() {
-    const cat   = activeTab;
-    const items = wardrobe[cat];
-    drawerBody.innerHTML = '';
-    items.forEach((item, i) => {
-      const el = document.createElement('div');
-      el.className = 'inv-item' + (current[cat] === i ? ' active' : '');
-      el.innerHTML = `<img src="${item.url}" alt="${item.name}"><div class="remove-x" onclick="removeItem('${cat}',${i},event)">✕</div>`;
-      el.addEventListener('click', () => jumpTo(cat, i));
-      drawerBody.appendChild(el);
-    });
-    const addBtn = document.createElement('div');
-    addBtn.className = 'add-item-btn';
-    addBtn.innerHTML = `<span>＋</span><p>Add ${cat.slice(0,-1)}</p>`;
-    addBtn.onclick = () => addItem(cat);
-    drawerBody.appendChild(addBtn);
-  }
+    const onMove = (ev) => {
+      const dx = ev.clientX - startEx;
+      // scale proportionally to stack width
+      transforms[cat].scale = Math.max(0.2, Math.min(3, startScale + dx / stackW * 2));
+      applyTransform(cat);
+    };
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
 
-  function switchTab(cat) {
-    activeTab = cat;
-    document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-' + cat).classList.add('active');
-    renderInventory();
-  }
+  // Scroll wheel to resize
+  el.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.05 : 0.05;
+    transforms[cat].scale = Math.max(0.2, Math.min(3, transforms[cat].scale + delta));
+    applyTransform(cat);
+  }, { passive: false });
+}
 
-  function toggleDrawer() {
-    document.getElementById('drawer').classList.toggle('collapsed');
-  }
+// Init drag for all layers
+['tops','bottoms','shoes'].forEach(makeDraggable);
 
+// ── Wardrobe logic ────────────────────────────────────────────
+function swipe(cat, dir) {
+  const items = wardrobe[cat];
+  if (!items.length) return;
+  let idx = current[cat] + dir;
+  if (idx < -1) idx = items.length - 1;
+  if (idx >= items.length) idx = -1;
+  current[cat] = idx;
+  applyOverlay(cat);
+  updateCounter(cat);
+  updateOutfitLabel();
   renderInventory();
-  Object.keys(wardrobe).forEach(updateCounter);
+}
+
+function jumpTo(cat, idx) {
+  current[cat] = idx;
+  applyOverlay(cat);
+  updateCounter(cat);
+  updateOutfitLabel();
+  renderInventory();
+}
+
+function applyOverlay(cat) {
+  const layer = layers[cat];
+  const img   = imgs[cat];
+  const idx   = current[cat];
+  if (idx === -1) {
+    img.src = '';
+    layer.classList.remove('on');
+  } else {
+    img.src = wardrobe[cat][idx].url;
+    layer.classList.add('on');
+  }
+}
+
+function updateCounter(cat) {
+  const items = wardrobe[cat];
+  const idx   = current[cat];
+  counters[cat].textContent = items.length
+    ? (idx === -1 ? `—/${items.length}` : `${idx+1}/${items.length}`)
+    : '—';
+}
+
+function updateOutfitLabel() {
+  const parts = [];
+  if (current.tops    >= 0) parts.push(wardrobe.tops[current.tops].name);
+  if (current.bottoms >= 0) parts.push(wardrobe.bottoms[current.bottoms].name);
+  if (current.shoes   >= 0) parts.push(wardrobe.shoes[current.shoes].name);
+  outfitLabel.textContent = parts.length ? parts.join(' · ') : 'no outfit selected';
+}
+
+let pendingCat = null;
+function addItem(cat) {
+  pendingCat = cat;
+  itemFileInput.value = '';
+  itemFileInput.click();
+}
+
+itemFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file || !pendingCat) return;
+  const url  = URL.createObjectURL(file);
+  const name = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+  wardrobe[pendingCat].push({ url, name });
+  current[pendingCat] = wardrobe[pendingCat].length - 1;
+  applyOverlay(pendingCat);
+  updateCounter(pendingCat);
+  updateOutfitLabel();
+  renderInventory();
+});
+
+function removeItem(cat, idx, e) {
+  e.stopPropagation();
+  wardrobe[cat].splice(idx, 1);
+  if (current[cat] >= wardrobe[cat].length) current[cat] = wardrobe[cat].length - 1;
+  applyOverlay(cat);
+  updateCounter(cat);
+  updateOutfitLabel();
+  renderInventory();
+}
+
+function renderInventory() {
+  const cat   = activeTab;
+  const items = wardrobe[cat];
+  drawerBody.innerHTML = '';
+  items.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'inv-item' + (current[cat] === i ? ' active' : '');
+    el.innerHTML = `<img src="${item.url}" alt="${item.name}"><div class="remove-x" onclick="removeItem('${cat}',${i},event)">✕</div>`;
+    el.addEventListener('click', () => jumpTo(cat, i));
+    drawerBody.appendChild(el);
+  });
+  const addBtn = document.createElement('div');
+  addBtn.className = 'add-item-btn';
+  addBtn.innerHTML = `<span>＋</span><p>Add ${cat.slice(0,-1)}</p>`;
+  addBtn.onclick = () => addItem(cat);
+  drawerBody.appendChild(addBtn);
+}
+
+function switchTab(cat) {
+  activeTab = cat;
+  document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + cat).classList.add('active');
+  renderInventory();
+}
+
+function toggleDrawer() {
+  document.getElementById('drawer').classList.toggle('collapsed');
+}
+
+// Init
+renderInventory();
+Object.keys(wardrobe).forEach(updateCounter);
 </script>
 </body>
 </html>
