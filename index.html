@@ -7,329 +7,70 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #f0ece4;
-    --surface: #e8e2d8;
-    --dark: #1a1714;
-    --mid: #6b6560;
-    --accent: #c8a98a;
-    --white: #faf8f4;
+    --bg: #f0ece4; --surface: #e8e2d8; --dark: #1a1714;
+    --mid: #6b6560; --accent: #c8a98a; --white: #faf8f4;
     --border: rgba(26,23,20,0.12);
   }
-
-  body {
-    font-family: 'DM Mono', monospace;
-    background: var(--bg);
-    color: var(--dark);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
+  body { font-family: 'DM Mono', monospace; background: var(--bg); color: var(--dark); min-height: 100vh; overflow-x: hidden; }
   body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
+    content: ''; position: fixed; inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0.5;
+    pointer-events: none; z-index: 100; opacity: 0.5;
   }
-
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px 40px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 28px;
-    font-weight: 300;
-    letter-spacing: 0.2em;
-    color: var(--dark);
-  }
-
+  header { display: flex; align-items: center; justify-content: space-between; padding: 24px 40px; border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; letter-spacing: 0.2em; color: var(--dark); }
   .logo span { font-style: italic; color: var(--accent); }
-
-  .status-bar {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    color: var(--mid);
-    text-transform: uppercase;
-  }
-
-  .main {
-    display: grid;
-    grid-template-columns: 220px 1fr 280px;
-    gap: 0;
-    height: calc(100vh - 73px);
-  }
-
-  .panel-left {
-    border-right: 1px solid var(--border);
-    padding: 32px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    overflow-y: auto;
-  }
-
-  .panel-label {
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--mid);
-    margin-bottom: 12px;
-  }
-
-  .upload-zone {
-    border: 1.5px dashed var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--white);
-    position: relative;
-    overflow: hidden;
-  }
-
+  .status-bar { font-size: 10px; letter-spacing: 0.15em; color: var(--mid); text-transform: uppercase; }
+  .main { display: grid; grid-template-columns: 220px 1fr 280px; height: calc(100vh - 73px); }
+  .panel-left { border-right: 1px solid var(--border); padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+  .panel-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 12px; }
+  .upload-zone { border: 1.5px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--white); position: relative; overflow: hidden; }
   .upload-zone:hover { border-color: var(--accent); background: rgba(200,169,138,0.06); }
-
-  .upload-zone input {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
   .upload-icon { font-size: 24px; margin-bottom: 8px; display: block; }
   .upload-zone p { font-size: 10px; color: var(--mid); letter-spacing: 0.05em; line-height: 1.5; }
-
-  .garment-preview {
-    width: 100%;
-    aspect-ratio: 3/4;
-    border-radius: 10px;
-    object-fit: cover;
-    border: 1px solid var(--border);
-    display: none;
-  }
-
+  .garment-preview { width: 100%; aspect-ratio: 3/4; border-radius: 10px; object-fit: cover; border: 1px solid var(--border); display: none; }
   .garment-preview.visible { display: block; }
-
-  .category-select {
-    width: 100%;
-    padding: 10px 14px;
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--dark);
-    appearance: none;
-    cursor: pointer;
-    outline: none;
-  }
-
-  .try-btn {
-    width: 100%;
-    padding: 14px;
-    background: var(--dark);
-    color: var(--white);
-    border: none;
-    border-radius: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: auto;
-  }
-
+  .category-select { width: 100%; padding: 10px 14px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--dark); appearance: none; cursor: pointer; outline: none; }
+  .try-btn { width: 100%; padding: 14px; background: var(--dark); color: var(--white); border: none; border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: auto; }
   .try-btn:hover:not(:disabled) { background: var(--accent); color: var(--dark); }
   .try-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .canvas-area {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .model-container {
-    position: relative;
-    height: 85%;
-    max-height: 700px;
-    aspect-ratio: 2/3;
-    overflow: hidden;
-  }
-
-  .model-img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center center;
-  }
-
-  .result-img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center center;
-    opacity: 0;
-    transition: opacity 0.6s ease;
-  }
-
+  .canvas-area { display: flex; align-items: center; justify-content: center; background: var(--bg); position: relative; overflow: hidden; }
+  .model-container { position: relative; height: 85%; max-height: 700px; aspect-ratio: 2/3; overflow: hidden; }
+  .model-img { width: 100%; height: 100%; object-fit: contain; object-position: center; }
+  .result-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; opacity: 0; transition: opacity 0.6s ease; }
   .result-img.visible { opacity: 1; }
-
-  .loading-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(240,236,228,0.85);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-    backdrop-filter: blur(4px);
-  }
-
+  .loading-overlay { position: absolute; inset: 0; background: rgba(240,236,228,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px); }
   .loading-overlay.active { opacity: 1; pointer-events: all; }
-
-  .spinner {
-    width: 32px;
-    height: 32px;
-    border: 2px solid var(--border);
-    border-top-color: var(--dark);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
+  .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--dark); border-radius: 50%; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .loading-text { font-size: 10px; letter-spacing: 0.15em; color: var(--mid); text-transform: uppercase; }
-
-  .panel-right {
-    border-left: 1px solid var(--border);
-    padding: 32px 24px;
-    overflow-y: auto;
-  }
-
-  .api-config {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-  }
-
-  .api-config label {
-    display: block;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--mid);
-    margin-bottom: 8px;
-  }
-
-  .api-input {
-    width: 100%;
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--dark);
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
+  .panel-right { border-left: 1px solid var(--border); padding: 32px 24px; overflow-y: auto; }
+  .api-config { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .api-config label { display: block; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mid); margin-bottom: 8px; }
+  .api-input { width: 100%; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--dark); outline: none; transition: border-color 0.2s; }
   .api-input:focus { border-color: var(--accent); }
   .api-hint { font-size: 9px; color: var(--mid); margin-top: 6px; line-height: 1.5; }
-
   .result-section { margin-top: 8px; }
-
-  .result-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    min-height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
+  .result-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 16px; min-height: 120px; display: flex; align-items: center; justify-content: center; }
   .result-placeholder { font-size: 10px; color: var(--mid); text-align: center; letter-spacing: 0.05em; line-height: 1.8; }
-
-  .download-btn {
-    width: 100%;
-    padding: 12px;
-    background: transparent;
-    color: var(--dark);
-    border: 1.5px solid var(--dark);
-    border-radius: 10px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 12px;
-    display: none;
-  }
-
+  .download-btn { width: 100%; padding: 12px; background: transparent; color: var(--dark); border: 1.5px solid var(--dark); border-radius: 10px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: 12px; display: none; }
   .download-btn:hover { background: var(--dark); color: var(--white); }
   .download-btn.visible { display: block; }
-
-  .error-msg {
-    background: #fde8e8;
-    border: 1px solid #f5c6c6;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 10px;
-    color: #c0392b;
-    line-height: 1.5;
-    display: none;
-    margin-top: 12px;
-  }
-
+  .error-msg { background: #fde8e8; border: 1px solid #f5c6c6; border-radius: 8px; padding: 12px; font-size: 10px; color: #c0392b; line-height: 1.5; display: none; margin-top: 12px; }
   .error-msg.visible { display: block; }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   header, .panel-left, .canvas-area, .panel-right { animation: fadeUp 0.5s ease both; }
-  .panel-left { animation-delay: 0.1s; }
-  .canvas-area { animation-delay: 0.15s; }
-  .panel-right { animation-delay: 0.2s; }
+  .panel-left { animation-delay: 0.1s; } .canvas-area { animation-delay: 0.15s; } .panel-right { animation-delay: 0.2s; }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">DR<span>A</span>PE</div>
   <div class="status-bar">Virtual Try-On Studio · MVP</div>
 </header>
-
 <div class="main">
-
   <div class="panel-left">
     <div>
       <div class="panel-label">01 — Garment</div>
@@ -340,7 +81,6 @@
       </div>
       <img class="garment-preview" id="garmentPreview" alt="Garment preview">
     </div>
-
     <div>
       <div class="panel-label">02 — Category</div>
       <select class="category-select" id="categorySelect">
@@ -349,10 +89,7 @@
         <option value="one-pieces">One-pieces / Dresses</option>
       </select>
     </div>
-
-    <button class="try-btn" id="tryBtn" disabled>
-      Try It On →
-    </button>
+    <button class="try-btn" id="tryBtn" disabled>Try It On →</button>
   </div>
 
   <div class="canvas-area">
@@ -374,7 +111,6 @@
       <input class="api-input" type="text" id="apiKeyInput" placeholder="fa-xxxxxxxxxxxxxxxx">
       <p class="api-hint">Your key is never stored or sent anywhere except directly to Fashn.ai.</p>
     </div>
-
     <div class="result-section">
       <div class="panel-label">Result</div>
       <div class="result-card" id="resultCard">
@@ -384,22 +120,22 @@
       <div class="error-msg" id="errorMsg"></div>
     </div>
   </div>
-
 </div>
 
-<script>
-  const garmentInput  = document.getElementById('garmentInput');
+<script type="module">
+  import { upload } from 'https://cdn.jsdelivr.net/npm/@vercel/blob@0.27.0/+esm';
+
+  const garmentInput   = document.getElementById('garmentInput');
   const garmentPreview = document.getElementById('garmentPreview');
-  const tryBtn        = document.getElementById('tryBtn');
+  const tryBtn         = document.getElementById('tryBtn');
   const loadingOverlay = document.getElementById('loadingOverlay');
-  const loadingText   = document.getElementById('loadingText');
-  const resultImg     = document.getElementById('resultImg');
-  const downloadBtn   = document.getElementById('downloadBtn');
-  const errorMsg      = document.getElementById('errorMsg');
-  const apiKeyInput   = document.getElementById('apiKeyInput');
+  const loadingText    = document.getElementById('loadingText');
+  const resultImg      = document.getElementById('resultImg');
+  const downloadBtn    = document.getElementById('downloadBtn');
+  const errorMsg       = document.getElementById('errorMsg');
+  const apiKeyInput    = document.getElementById('apiKeyInput');
   const categorySelect = document.getElementById('categorySelect');
 
-  // Model image hosted on GitHub — sent as URL, not base64
   const MODEL_IMAGE_URL = 'https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.png';
 
   let garmentFile = null;
@@ -424,29 +160,14 @@
     tryBtn.disabled = true;
 
     try {
-      // Step 1: Read garment as base64 at FULL quality (no compression)
-      const garmentBase64 = await readFileAsBase64(garmentFile);
-
-      // Step 2: Upload garment to Vercel Blob via our API, get back a URL
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: garmentBase64,
-          filename: `garment-${Date.now()}.${garmentFile.name.split('.').pop()}`,
-        }),
+      // Step 1: Upload garment directly from browser to Vercel Blob (no size limit issues)
+      const blob = await upload(garmentFile.name, garmentFile, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
       });
+      const garmentUrl = blob.url;
 
-      const uploadText = await uploadRes.text();
-      let uploadData;
-      try { uploadData = JSON.parse(uploadText); }
-      catch { throw new Error(`Upload error: ${uploadText.slice(0, 200)}`); }
-
-      if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
-
-      const garmentUrl = uploadData.url;
-
-      // Step 3: Send both as URLs to Fashn.ai — same as studio does
+      // Step 2: Send both as clean URLs to Fashn.ai
       loadingText.textContent = 'Processing…';
       const runRes = await fetch('/api/tryon', {
         method: 'POST',
@@ -463,13 +184,12 @@
       let runData;
       try { runData = JSON.parse(runText); }
       catch { throw new Error(`Server error: ${runText.slice(0, 200)}`); }
-
       if (!runRes.ok) throw new Error(runData.detail || runData.error || `API error ${runRes.status}`);
 
       const predictionId = runData.id;
       if (!predictionId) throw new Error('No prediction ID returned');
 
-      // Step 4: Poll for result
+      // Step 3: Poll for result
       loadingText.textContent = 'Rendering…';
       let result = null;
       for (let i = 0; i < 60; i++) {
@@ -490,7 +210,6 @@
 
       if (!result) throw new Error('Timed out waiting for result');
 
-      // Show result
       resultImg.src = result;
       resultImg.classList.add('visible');
       downloadBtn.classList.add('visible');
@@ -509,20 +228,7 @@
     }
   });
 
-  function readFileAsBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function showError(msg) {
-    errorMsg.textContent = msg;
-    errorMsg.classList.add('visible');
-  }
-
+  function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('visible'); }
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
 </body>
