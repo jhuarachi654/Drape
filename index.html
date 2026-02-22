@@ -14,7 +14,6 @@
     --dark: #1a1714;
     --mid: #6b6560;
     --accent: #c8a98a;
-    --blue-soft: #b8c9d8;
     --white: #faf8f4;
     --border: rgba(26,23,20,0.12);
   }
@@ -160,7 +159,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0ece4;
+    background: var(--bg);
     position: relative;
     overflow: hidden;
   }
@@ -170,7 +169,6 @@
     height: 85%;
     max-height: 700px;
     aspect-ratio: 2/3;
-    border-radius: 0;
     overflow: hidden;
   }
 
@@ -261,7 +259,6 @@
   }
 
   .api-input:focus { border-color: var(--accent); }
-
   .api-hint { font-size: 9px; color: var(--mid); margin-top: 6px; line-height: 1.5; }
 
   .result-section { margin-top: 8px; }
@@ -313,13 +310,6 @@
 
   .error-msg.visible { display: block; }
 
-  .size-hint {
-    font-size: 9px;
-    color: var(--mid);
-    margin-top: 6px;
-    text-align: center;
-  }
-
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
@@ -340,7 +330,6 @@
 
 <div class="main">
 
-  <!-- LEFT: Upload garment -->
   <div class="panel-left">
     <div>
       <div class="panel-label">01 — Garment</div>
@@ -350,7 +339,6 @@
         <p>Upload clothing<br>item photo</p>
       </div>
       <img class="garment-preview" id="garmentPreview" alt="Garment preview">
-      <div class="size-hint" id="sizeHint"></div>
     </div>
 
     <div>
@@ -367,37 +355,30 @@
     </button>
   </div>
 
-  <!-- CENTER: Model canvas -->
   <div class="canvas-area">
     <div class="model-container">
-      <img class="model-img" id="modelImg" src="https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.png" alt="Model">
+      <img class="model-img" id="modelImg"
+        src="https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.png"
+        alt="Model">
       <img class="result-img" id="resultImg" alt="Try-on result">
       <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <div class="loading-text">Processing…</div>
+        <div class="loading-text" id="loadingText">Uploading…</div>
       </div>
     </div>
   </div>
 
-  <!-- RIGHT: Config + result -->
   <div class="panel-right">
     <div class="api-config">
       <label>Fashn.ai API Key</label>
-      <input
-        class="api-input"
-        type="text"
-        id="apiKeyInput"
-        placeholder="fa-xxxxxxxxxxxxxxxx"
-      >
+      <input class="api-input" type="text" id="apiKeyInput" placeholder="fa-xxxxxxxxxxxxxxxx">
       <p class="api-hint">Your key is never stored or sent anywhere except directly to Fashn.ai.</p>
     </div>
 
     <div class="result-section">
       <div class="panel-label">Result</div>
       <div class="result-card" id="resultCard">
-        <div class="result-placeholder">
-          Upload a garment<br>and hit Try It On
-        </div>
+        <div class="result-placeholder">Upload a garment<br>and hit Try It On</div>
       </div>
       <button class="download-btn" id="downloadBtn">↓ Save Result</button>
       <div class="error-msg" id="errorMsg"></div>
@@ -407,128 +388,103 @@
 </div>
 
 <script>
-  const garmentInput = document.getElementById('garmentInput');
+  const garmentInput  = document.getElementById('garmentInput');
   const garmentPreview = document.getElementById('garmentPreview');
-  const tryBtn = document.getElementById('tryBtn');
+  const tryBtn        = document.getElementById('tryBtn');
   const loadingOverlay = document.getElementById('loadingOverlay');
-  const resultImg = document.getElementById('resultImg');
-  const downloadBtn = document.getElementById('downloadBtn');
-  const errorMsg = document.getElementById('errorMsg');
-  const apiKeyInput = document.getElementById('apiKeyInput');
+  const loadingText   = document.getElementById('loadingText');
+  const resultImg     = document.getElementById('resultImg');
+  const downloadBtn   = document.getElementById('downloadBtn');
+  const errorMsg      = document.getElementById('errorMsg');
+  const apiKeyInput   = document.getElementById('apiKeyInput');
   const categorySelect = document.getElementById('categorySelect');
-  const sizeHint = document.getElementById('sizeHint');
 
-  // Model image — hosted on GitHub as a real PNG
+  // Model image hosted on GitHub — sent as URL, not base64
   const MODEL_IMAGE_URL = 'https://raw.githubusercontent.com/jhuarachi654/Drape/main/johanna%202_6%201.png';
 
-  let garmentDataUrl = null;
+  let garmentFile = null;
 
-  // Compress image to stay well under Vercel's 4.5MB limit
-  function compressImage(file, maxWidth = 1024, quality = 0.82) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = url;
-    });
-  }
-
-  garmentInput.addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Show preview immediately from original
-    const previewUrl = URL.createObjectURL(file);
-    garmentPreview.src = previewUrl;
+  garmentInput.addEventListener('change', (e) => {
+    garmentFile = e.target.files[0];
+    if (!garmentFile) return;
+    garmentPreview.src = URL.createObjectURL(garmentFile);
     garmentPreview.classList.add('visible');
     document.getElementById('uploadZone').style.display = 'none';
-    sizeHint.textContent = 'Compressing…';
-    tryBtn.disabled = true;
-
-    // Compress for API
-    garmentDataUrl = await compressImage(file);
-
-    // Show compressed size
-    const bytes = Math.round((garmentDataUrl.length * 3) / 4);
-    const kb = Math.round(bytes / 1024);
-    sizeHint.textContent = `Compressed: ~${kb}KB`;
-
     tryBtn.disabled = false;
   });
 
   tryBtn.addEventListener('click', async () => {
     const apiKey = apiKeyInput.value.trim();
-    if (!apiKey) {
-      showError('Please enter your Fashn.ai API key in the right panel.');
-      return;
-    }
-    if (!garmentDataUrl) {
-      showError('Please upload a garment image first.');
-      return;
-    }
+    if (!apiKey) { showError('Please enter your Fashn.ai API key.'); return; }
+    if (!garmentFile) { showError('Please upload a garment image first.'); return; }
 
     errorMsg.classList.remove('visible');
     loadingOverlay.classList.add('active');
+    loadingText.textContent = 'Uploading garment…';
     tryBtn.disabled = true;
 
     try {
-      // Step 1: Start the try-on job
+      // Step 1: Read garment as base64 at FULL quality (no compression)
+      const garmentBase64 = await readFileAsBase64(garmentFile);
+
+      // Step 2: Upload garment to Vercel Blob via our API, get back a URL
+      const uploadRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: garmentBase64,
+          filename: `garment-${Date.now()}.${garmentFile.name.split('.').pop()}`,
+        }),
+      });
+
+      const uploadText = await uploadRes.text();
+      let uploadData;
+      try { uploadData = JSON.parse(uploadText); }
+      catch { throw new Error(`Upload error: ${uploadText.slice(0, 200)}`); }
+
+      if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed');
+
+      const garmentUrl = uploadData.url;
+
+      // Step 3: Send both as URLs to Fashn.ai — same as studio does
+      loadingText.textContent = 'Processing…';
       const runRes = await fetch('/api/tryon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model_image: MODEL_IMAGE_URL,
-          garment_image: garmentDataUrl,
+          garment_image: garmentUrl,
           category: categorySelect.value,
           api_key: apiKey,
         }),
       });
 
-      let runData;
       const runText = await runRes.text();
-      try {
-        runData = JSON.parse(runText);
-      } catch {
-        throw new Error(`Server error: ${runText.slice(0, 200)}`);
-      }
+      let runData;
+      try { runData = JSON.parse(runText); }
+      catch { throw new Error(`Server error: ${runText.slice(0, 200)}`); }
 
-      if (!runRes.ok) {
-        throw new Error(runData.detail || runData.error || `API error ${runRes.status}`);
-      }
+      if (!runRes.ok) throw new Error(runData.detail || runData.error || `API error ${runRes.status}`);
 
       const predictionId = runData.id;
-      if (!predictionId) throw new Error('No prediction ID returned from Fashn.ai');
+      if (!predictionId) throw new Error('No prediction ID returned');
 
-      // Step 2: Poll for result
+      // Step 4: Poll for result
+      loadingText.textContent = 'Rendering…';
       let result = null;
       for (let i = 0; i < 60; i++) {
         await sleep(2000);
         const statusRes = await fetch(`/api/status?id=${predictionId}&api_key=${encodeURIComponent(apiKey)}`);
         const statusText = await statusRes.text();
         let statusData;
-        try {
-          statusData = JSON.parse(statusText);
-        } catch {
-          throw new Error(`Status error: ${statusText.slice(0, 200)}`);
-        }
+        try { statusData = JSON.parse(statusText); }
+        catch { throw new Error(`Status error: ${statusText.slice(0, 200)}`); }
 
         if (statusData.status === 'completed') {
           result = Array.isArray(statusData.output) ? statusData.output[0] : statusData.output;
           break;
         } else if (statusData.status === 'failed') {
-          throw new Error(statusData.error || 'Processing failed on Fashn.ai');
+          throw new Error(statusData.error || 'Processing failed');
         }
       }
 
@@ -553,15 +509,21 @@
     }
   });
 
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   function showError(msg) {
     errorMsg.textContent = msg;
     errorMsg.classList.add('visible');
   }
 
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 </script>
-
 </body>
 </html>
