@@ -60,6 +60,8 @@
   .download-btn.visible { display: block; }
   .error-msg { background: #fde8e8; border: 1px solid #f5c6c6; border-radius: 8px; padding: 12px; font-size: 10px; color: #c0392b; line-height: 1.5; display: none; margin-top: 12px; }
   .error-msg.visible { display: block; }
+  .success-msg { background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px; padding: 12px; font-size: 10px; color: #2e7d32; line-height: 1.5; display: none; margin-top: 12px; }
+  .success-msg.visible { display: block; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   header, .panel-left, .canvas-area, .panel-right { animation: fadeUp 0.5s ease both; }
   .panel-left { animation-delay: 0.1s; } .canvas-area { animation-delay: 0.15s; } .panel-right { animation-delay: 0.2s; }
@@ -68,12 +70,12 @@
 <body>
 <header>
   <div class="logo">DR<span>A</span>PE</div>
-  <div class="status-bar">Virtual Try-On Studio · MVP</div>
+  <div class="status-bar">VIRTUAL TRY-ON STUDIO · MVP</div>
 </header>
 <div class="main">
   <div class="panel-left">
     <div>
-      <div class="panel-label">01 — Garment</div>
+      <div class="panel-label">01 — GARMENT</div>
       <div class="upload-zone" id="uploadZone">
         <input type="file" id="garmentInput" accept="image/*">
         <span class="upload-icon">＋</span>
@@ -82,14 +84,14 @@
       <img class="garment-preview" id="garmentPreview" alt="Garment preview">
     </div>
     <div>
-      <div class="panel-label">02 — Category</div>
+      <div class="panel-label">02 — CATEGORY</div>
       <select class="category-select" id="categorySelect">
         <option value="tops">Tops</option>
         <option value="bottoms">Bottoms</option>
         <option value="one-pieces">One-pieces / Dresses</option>
       </select>
     </div>
-    <button class="try-btn" id="tryBtn" disabled>Try It On →</button>
+    <button class="try-btn" id="tryBtn" disabled>TRY IT ON →</button>
   </div>
 
   <div class="canvas-area">
@@ -107,17 +109,18 @@
 
   <div class="panel-right">
     <div class="api-config">
-      <label>Fashn.ai API Key</label>
+      <label>FASHN.AI API KEY</label>
       <input class="api-input" type="text" id="apiKeyInput" placeholder="fa-xxxxxxxxxxxxxxxx">
       <p class="api-hint">Your key is never stored or sent anywhere except directly to Fashn.ai.</p>
     </div>
     <div class="result-section">
-      <div class="panel-label">Result</div>
+      <div class="panel-label">RESULT</div>
       <div class="result-card" id="resultCard">
         <div class="result-placeholder">Upload a garment<br>and hit Try It On</div>
       </div>
-      <button class="download-btn" id="downloadBtn">↓ Save Result</button>
+      <div class="success-msg" id="successMsg"></div>
       <div class="error-msg" id="errorMsg"></div>
+      <button class="download-btn" id="downloadBtn">↓ SAVE RESULT</button>
     </div>
   </div>
 </div>
@@ -131,6 +134,7 @@
   const resultImg      = document.getElementById('resultImg');
   const downloadBtn    = document.getElementById('downloadBtn');
   const errorMsg       = document.getElementById('errorMsg');
+  const successMsg     = document.getElementById('successMsg');
   const apiKeyInput    = document.getElementById('apiKeyInput');
   const categorySelect = document.getElementById('categorySelect');
   const uploadZone     = document.getElementById('uploadZone');
@@ -139,12 +143,49 @@
   
   // Your ImgBB API key
   const IMGBB_API_KEY = '9272cae259ec202c877e982b848b3e16';
+  
+  // CORS proxy to avoid CORS issues
+  const CORS_PROXY = 'https://corsproxy.io/?';
 
   let garmentFile = null;
+
+  // Test ImgBB connection on page load
+  window.addEventListener('load', () => {
+    console.log('🔧 Testing ImgBB connection...');
+    testImgBB();
+  });
+
+  async function testImgBB() {
+    try {
+      const testFormData = new FormData();
+      // Create a tiny test image (1x1 pixel)
+      const testBlob = new Blob(['R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'], {type: 'image/gif'});
+      testFormData.append('image', testBlob, 'test.gif');
+      
+      const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: 'POST',
+        body: testFormData
+      });
+      
+      if (response.ok) {
+        console.log('✅ ImgBB connection successful');
+      } else {
+        console.log('⚠️ ImgBB test failed, but will try on actual upload');
+      }
+    } catch (err) {
+      console.log('⚠️ ImgBB test error (non-critical):', err.message);
+    }
+  }
 
   garmentInput.addEventListener('change', (e) => {
     garmentFile = e.target.files[0];
     if (!garmentFile) return;
+    
+    // Check file size (max 10MB)
+    if (garmentFile.size > 10 * 1024 * 1024) {
+      showError('File too large. Please upload an image under 10MB.');
+      return;
+    }
     
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -154,6 +195,7 @@
     };
     reader.readAsDataURL(garmentFile);
     tryBtn.disabled = false;
+    showSuccess('Garment uploaded successfully!');
   });
 
   // Reset upload zone when clicking on preview
@@ -164,13 +206,16 @@
     uploadZone.style.display = 'block';
     garmentFile = null;
     tryBtn.disabled = true;
+    successMsg.classList.remove('visible');
   });
 
   async function uploadToImgBB(file) {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_API_KEY, {
+    showSuccess('Uploading to ImgBB...');
+    
+    const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
       method: 'POST',
       body: formData
     });
@@ -184,12 +229,49 @@
     return data.data.url;
   }
 
+  async function callFashnAI(endpoint, apiKey, body = null) {
+    const url = endpoint === 'run' 
+      ? 'https://api.fashn.ai/v1/run'
+      : `https://api.fashn.ai/v1/status/${body}`;
+    
+    const options = {
+      method: body ? 'POST' : 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': apiKey
+      }
+    };
+    
+    if (body && endpoint === 'run') {
+      options.body = JSON.stringify(body);
+    }
+    
+    // Try direct connection first
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      console.log('Direct connection failed, trying with proxy...');
+    } catch (err) {
+      console.log('Direct connection error:', err.message);
+    }
+    
+    // If direct fails, try with CORS proxy
+    const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+    const proxyOptions = {...options};
+    if (options.body) {
+      proxyOptions.body = options.body;
+    }
+    
+    return await fetch(proxyUrl, proxyOptions);
+  }
+
   tryBtn.addEventListener('click', async () => {
     const apiKey = apiKeyInput.value.trim();
     if (!apiKey) { showError('Please enter your Fashn.ai API key.'); return; }
     if (!garmentFile) { showError('Please upload a garment image first.'); return; }
 
     errorMsg.classList.remove('visible');
+    successMsg.classList.remove('visible');
     loadingOverlay.classList.add('active');
     loadingText.textContent = 'Uploading garment to ImgBB…';
     tryBtn.disabled = true;
@@ -198,6 +280,7 @@
       // Upload to ImgBB first
       const garmentUrl = await uploadToImgBB(garmentFile);
       console.log('✅ Uploaded to ImgBB:', garmentUrl);
+      showSuccess('✅ Image uploaded to ImgBB');
 
       // Map categories for Fashn.ai
       const categoryMap = {
@@ -208,20 +291,14 @@
 
       // Start the Fashn.ai process
       loadingText.textContent = 'Starting virtual try-on with Fashn.ai…';
+      showSuccess('⏳ Calling Fashn.ai API...');
       
-      const runResponse = await fetch('https://api.fashn.ai/v1/run', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': apiKey
-        },
-        body: JSON.stringify({
-          model_image: MODEL_IMAGE_URL,
-          garment_image: garmentUrl,
-          category: categoryMap[categorySelect.value] || 'tops',
-          garment_photo_type: 'auto',
-          mode: 'quality'
-        })
+      const runResponse = await callFashnAI('run', apiKey, {
+        model_image: MODEL_IMAGE_URL,
+        garment_image: garmentUrl,
+        category: categoryMap[categorySelect.value] || 'tops',
+        garment_photo_type: 'auto',
+        mode: 'quality'
       });
 
       const runData = await runResponse.json();
@@ -233,6 +310,8 @@
 
       const predictionId = runData.id;
       if (!predictionId) throw new Error('No prediction ID returned');
+      
+      showSuccess(`⏳ Processing started (ID: ${predictionId.substring(0,8)}...)`);
 
       // Poll for result
       loadingText.textContent = 'Rendering virtual try-on…';
@@ -244,11 +323,7 @@
         await new Promise(r => setTimeout(r, 2000));
         attempts++;
         
-        const statusResponse = await fetch(`https://api.fashn.ai/v1/status/${predictionId}`, {
-          headers: {
-            'api-key': apiKey
-          }
-        });
+        const statusResponse = await callFashnAI('status', apiKey, predictionId);
         
         const statusData = await statusResponse.json();
         console.log(`⏳ Attempt ${attempts}:`, statusData);
@@ -281,6 +356,7 @@
       }
 
       console.log('✅ Got result:', result);
+      showSuccess('✅ Virtual try-on complete!');
       
       // Display the result
       resultImg.src = result;
@@ -310,9 +386,18 @@
   function showError(msg) { 
     errorMsg.textContent = msg; 
     errorMsg.classList.add('visible');
+    successMsg.classList.remove('visible');
     setTimeout(() => {
       errorMsg.classList.remove('visible');
     }, 10000);
+  }
+  
+  function showSuccess(msg) {
+    successMsg.textContent = msg;
+    successMsg.classList.add('visible');
+    setTimeout(() => {
+      successMsg.classList.remove('visible');
+    }, 5000);
   }
 </script>
 </body>
