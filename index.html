@@ -149,6 +149,15 @@
     tryBtn.disabled = false;
   });
 
+  // Reset upload zone when clicking on preview (optional)
+  garmentPreview.addEventListener('click', () => {
+    garmentInput.value = '';
+    garmentPreview.classList.remove('visible');
+    document.getElementById('uploadZone').style.display = 'block';
+    garmentFile = null;
+    tryBtn.disabled = true;
+  });
+
   tryBtn.addEventListener('click', async () => {
     const apiKey = apiKeyInput.value.trim();
     if (!apiKey) { showError('Please enter your Fashn.ai API key.'); return; }
@@ -160,15 +169,16 @@
     tryBtn.disabled = true;
 
     try {
-      // Step 1: Upload garment directly from browser to Vercel Blob (no size limit issues)
+      // Step 1: Upload garment directly from browser to Vercel Blob
       const blob = await upload(garmentFile.name, garmentFile, {
         access: 'public',
         handleUploadUrl: '/api/upload',
       });
       const garmentUrl = blob.url;
 
-      // Step 2: Send both as clean URLs to Fashn.ai
-      loadingText.textContent = 'Processing…';
+      // Step 2: Send both as clean URLs to Fashn.ai via our API
+      loadingText.textContent = 'Processing with Fashn.ai…';
+      
       const runRes = await fetch('/api/tryon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -180,38 +190,70 @@
         }),
       });
 
-      const runText = await runRes.text();
-      let runData;
-      try { runData = JSON.parse(runText); }
-      catch { throw new Error(`Server error: ${runText.slice(0, 200)}`); }
-      if (!runRes.ok) throw new Error(runData.detail || runData.error || `API error ${runRes.status}`);
+      const runData = await runRes.json();
+      
+      if (!runRes.ok) {
+        throw new Error(runData.error || runData.detail || `API error ${runRes.status}`);
+      }
 
       const predictionId = runData.id;
       if (!predictionId) throw new Error('No prediction ID returned');
 
       // Step 3: Poll for result
-      loadingText.textContent = 'Rendering…';
+      loadingText.textContent = 'Rendering virtual try-on…';
       let result = null;
-      for (let i = 0; i < 60; i++) {
+      let attempts = 0;
+      const maxAttempts = 30; // 30 * 2 seconds = 60 seconds max
+      
+      while (attempts < maxAttempts && !result) {
         await sleep(2000);
+        attempts++;
+        
         const statusRes = await fetch(`/api/status?id=${predictionId}&api_key=${encodeURIComponent(apiKey)}`);
-        const statusText = await statusRes.text();
-        let statusData;
-        try { statusData = JSON.parse(statusText); }
-        catch { throw new Error(`Status error: ${statusText.slice(0, 200)}`); }
+        const statusData = await statusRes.json();
+
+        if (!statusRes.ok) {
+          throw new Error(statusData.error || `Status error ${statusRes.status}`);
+        }
+
+        console.log('Status response:', statusData); // For debugging
 
         if (statusData.status === 'completed') {
-          result = Array.isArray(statusData.output) ? statusData.output[0] : statusData.output;
+          // Handle different response formats
+          if (Array.isArray(statusData.output)) {
+            result = statusData.output[0];
+          } else if (typeof statusData.output === 'string') {
+            result = statusData.output;
+          } else if (statusData.output?.url) {
+            result = statusData.output.url;
+          } else if (statusData.url) {
+            result = statusData.url;
+          }
           break;
         } else if (statusData.status === 'failed') {
           throw new Error(statusData.error || 'Processing failed');
+        } else if (statusData.status === 'processing' || statusData.status === 'starting') {
+          // Still processing, continue polling
+          loadingText.textContent = `Rendering... (${attempts}/${maxAttempts})`;
         }
       }
 
-      if (!result) throw new Error('Timed out waiting for result');
+      if (!result) {
+        if (attempts >= maxAttempts) {
+          throw new Error('Timed out waiting for result. Please try again.');
+        } else {
+          throw new Error('No result URL in response');
+        }
+      }
 
+      // Display the result
       resultImg.src = result;
       resultImg.classList.add('visible');
+      
+      // Update result card
+      const resultCard = document.getElementById('resultCard');
+      resultCard.innerHTML = `<img src="${result}" style="width: 100%; border-radius: 8px;" alt="Try-on result">`;
+      
       downloadBtn.classList.add('visible');
       downloadBtn.onclick = () => {
         const a = document.createElement('a');
@@ -221,6 +263,7 @@
       };
 
     } catch (err) {
+      console.error('Error:', err);
       showError(`Error: ${err.message}`);
     } finally {
       loadingOverlay.classList.remove('active');
@@ -228,8 +271,19 @@
     }
   });
 
-  function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('visible'); }
-  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function showError(msg) { 
+    errorMsg.textContent = msg; 
+    errorMsg.classList.add('visible');
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+      errorMsg.classList.remove('visible');
+    }, 10000);
+  }
+  
+  function sleep(ms) { 
+    return new Promise(resolve => setTimeout(resolve, ms)); 
+  }
 </script>
 </body>
 </html>
